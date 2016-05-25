@@ -1,0 +1,448 @@
+﻿@{
+    ViewBag.Title = "资产管理";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" title="资产管理" style="width:100%;height:110px;padding-top:15px;">
+    <table>
+        <tr>
+            <td style="width:3%" align="right">关&nbsp;键&nbsp;字</td>
+            <td style="width:10%"><input id="KeyWord" style="width:85%" /></td>
+            <td style="width:6%" align="right">资产状态</td>
+            <td style="width:10%">
+                <select id="Status" style="width:100%"><option value="">全部</option></select>
+            </td>
+            <td style="width:6%" align="right">资产类别</td>
+            <td style="width:10%">
+                <select id="Category" style="width:100%"><option value="">全部</option></select>
+            </td>
+            <td style="width:6%" align="right">计量单位</td>
+            <td style="width:10%">
+                <select id="Measure" style="width:100%"><option value="">全部</option></select>
+            </td>
+        </tr>
+        <tr>
+            <td align="right">部&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;门</td>
+            <td>
+                <select id="Department" style="width:85%"><option value="">全部</option></select>
+            </td>
+            <td align="right">使&nbsp;用&nbsp;人</td>
+            <td>
+                <select id="Employer" style="width:100%"><option value="">全部</option></select>
+            </td>
+            <td align="right">存放位置</td>
+            <td>
+                <select id="Storage" style="width:100%"><option value="">全部</option></select>
+            </td>
+            <td align="right">增加方式</td>
+            <td>
+                <select id="AddMode" style="width:100%"><option value="">全部</option></select>
+            </td>
+        </tr>
+    </table>
+</div>
+<div>
+    <div id="ShowGrid"></div>
+</div>
+
+<!--<script src='http://localhost:8000/CLodopfuncs.js'></script>-->
+<script language="javascript" src="~/Scripts/LodopFuncs.js"></script>
+<!--<object id="LODOP_OB" classid="clsid:2105C259-1E0C-4534-8141-A753534CB4CA" width=0 height=0>
+    <embed id="LODOP_EM" type="application/x-print-lodop" width=0 height=0></embed>
+</object>-->
+
+<script language="javascript" src="~/Scripts/jquery.qrcode.min.js"></script>
+
+<script type="text/javascript">
+    
+    var Columns = [
+        { field: 'ck', checkbox: true },   //选择
+        //{ title: 'ID', field: 'ID', width: 40, sortable: true },  //主键
+        { title: '资产编码', field: 'Code', width: 80, sortable: true },
+        { title: '资产名称', field: 'Name', width: 100, sortable: true },
+        { title: '资产条码', field: 'BarCode', width: 120, sortable: true },
+        { title: '资产规格', field: 'ChartNumber', width: 100, sortable: true },
+        { title: '资产类型', field: 'CategoryName', width: 100, sortable: true },
+        { title: '资产状态', field: 'StatusName', width: 80, sortable: true },
+        { title: '增加人', field: 'OperatorName', width: 100, sortable: true },
+        { title: '资产数量', field: 'Quantity', width: 60, sortable: true },
+        { title: '使用部门', field: 'DepartmentName', width: 100, sortable: true },
+        { title: '使用人', field: 'UserName', width: 80, sortable: true },
+        { title: '存放位置', field: 'StorageName', width: 120, sortable: true },
+        { title: '计量单位', field: 'MeasureName', width: 60, sortable: true },
+        { title: '资产原值', field: 'OriginalValue', width: 100, sortable: true },
+        { title: '增加方式', field: 'AddModeName', width: 80, sortable: true },
+        { title: '使用年限', field: 'LimitYear', width: 60, sortable: true },
+        { title: '添加时间', field: 'AddTime', width: 120, sortable: true },
+        { title: '备注', field: 'Note', width: 160, sortable: true }
+    ];
+
+    //实现对DataGird控件的绑定操作
+    function DataLoad(queryParams) {
+        var Params = {};
+        Params.KeyWord = $("#KeyWord").val();
+        Params.StatusCode = $("#Status").val();
+        Params.CategoryCode = $("#Category").val();
+        Params.MeasureCode = $("#Measure").val();
+        Params.DepartmentCode = $("#Department").val();
+        Params.EmployerCode = $("#Employer").val();
+        Params.StorageCode = $("#Storage").val();
+        Params.AddModeCode = $("#AddMode").val();
+
+        $('#ShowGrid').datagrid({   //定位到Table标签，Table标签的ID是grid
+            title: '资产信息',
+            iconCls: 'icon-view',
+            height: function () { return document.body.clientHeight * 1 },//自动高度
+            ///nowrap: true,
+            ///autoRowHeight: false,
+            ///striped: true,
+            ///collapsible: true,
+            url: '/Shared/GetInventory',
+            ///sortName: 'Code',    //根据某个字段给easyUI排序
+            ///sortOrder: 'asc',
+            ///remoteSort: false,
+            ///idField: 'ID',
+            columns: [Columns],
+            pagination: true,
+            //pageIndex:1,//页索引
+            pageNumber:1,
+            pageSize:20,//页容量
+            //pageList: [10,15,20],
+            rownumbers: true,           
+            queryParams: Params,  //异步查询的参数            
+            toolbar: [{
+                text: '查询',
+                iconCls: 'icon-search',
+                handler: function () {
+                    Search();
+                }
+            }, '-', {
+                id: 'btnAdd',
+                text: '资产增加',
+                iconCls: 'icon-add',
+                handler: function () {
+                    Add();
+                }
+            }, '-', {
+                id: 'btnEdit',
+                text: '资产编辑',
+                iconCls: 'icon-edit',
+                handler: function () {
+                    Edit();
+                }
+            }, '-', {
+                id: 'btnAllocate',
+                text: '资产领用',
+                iconCls: 'icon-ok',
+                handler: function () {
+                    Allocate();
+                }
+            }, '-', {
+                id: 'btnAllot',
+                text: '资产调拨',
+                iconCls: 'icon-remove',
+                handler: function () {
+                    Allot();
+                }
+            }, '-', {
+                id: 'btnScrap',
+                text: '资产报废',
+                iconCls: 'icon-cancel',
+                handler: function () {
+                    Scrap();
+                }
+            }, '-', {
+                id: 'btnReuse',
+                text: '报废重用',
+                iconCls: 'icon-reload',
+                handler: function () {
+                    Reuse();
+                }
+            }, '-', {
+                id: 'btnPrint',
+                text: '标签打印',
+                iconCls: 'icon-print',
+                handler: function () {
+                    Print();//实现直接删除数据的方法
+                }
+            }]
+        });
+
+
+    }
+
+    //查询
+    function Search() {
+        var queryParams = {};
+        queryParams.KeyWord = $("#KeyWord").val();
+        queryParams.StatusCode = $("#Status").val();
+        queryParams.CategoryCode = $("#Category").val();
+        queryParams.MeasureCode = $("#Measure").val();
+        queryParams.DepartmentCode = $("#Department").val();
+        queryParams.EmployerCode = $("#Employer").val();
+        queryParams.StorageCode = $("#Storage").val();
+        queryParams.AddModeCode = $("#AddMode").val();
+        //重新加载datagrid的数据  
+        $("#ShowGrid").datagrid("reload", queryParams);
+    }
+
+    function SelectLoad() {
+        //资产状态
+        $.post("/Shared/GetStatus?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Status").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //资产类别
+        $.post("/Shared/GetCategory?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Category").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //计量单位
+        $.post("/Shared/GetMeasure?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Measure").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //部门
+        $.post("/Shared/GetDepartment?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Department").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //使用人
+        $.post("/Shared/GetEmployer?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Employer").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //存放位置
+        $.post("/Shared/GetStorage?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Storage").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //增加方式
+        $.post("/Shared/GetAddMode?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#AddMode").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+    }
+
+    //资产增加
+    function Add() {
+        //var txt = $("#KeyWord").val();//#gotopagenum是文本框的id属性  
+        //location.href = "zcgl_add?txt=" + txt;//location.href实现客户端页面的跳转
+        top.zDialog.OpenPage({
+            width: 1024,
+            height: 768,
+            url: "/Manage/zcgl_add?",
+            title: "资产新增",
+            Callback: function (data) {
+                Search();
+            }
+        });
+    }
+
+    //资产编辑
+    function Edit() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            if (objs.length == 1) {
+                if (objs[0].StatusCode == '001') {
+                    top.zDialog.OpenPage({
+                        width: 800,
+                        height: 200,
+                        url: "/Manage/zcgl_edit?ID=" + objs[0].ID,
+                        title: "资产编辑",
+                        Callback: function (data) {
+                            Search();
+                        }
+                    });
+                } else {
+                    top.Dialog.alert("请选择未使用的资产进行编辑！");
+                }
+            } else {
+                top.Dialog.alert("请选择一条记录进行编辑！");
+            }
+        } else {
+            top.Dialog.alert("请选择要编辑的资产！");
+        }
+    }
+
+    //资产领用（分配）
+    function Allocate() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            var strID = "",count=0;
+            $.each(objs, function (i, obj) {
+                if (obj.StatusCode == "001") {//未使用
+                    strID = strID + obj.ID + ",";
+                    count++;
+                } else {
+                    top.Dialog.alert("请选择未使用的资产！");
+                }
+            });
+            if (count > 0) {
+                strID = strID.substring(0, strID.length-1);
+                top.zDialog.OpenPage({
+                    width: 300,
+                    height: 200,
+                    url: "/Manage/zcly?StrID=" + strID,
+                    title: "资产领用",
+                    Callback: function (data) {
+                        Search();
+                    }
+                });
+            }
+        } else {
+            top.Dialog.alert("请选择要领用的资产！");
+        }
+    }
+    //资产调拨
+    function Allot() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            var strID = "", count = 0;
+            $.each(objs, function (i, obj) {
+                if (obj.StatusCode == "002") {//正在使用
+                    strID = strID + obj.ID + ",";
+                    count++;
+                } else {
+                    top.Dialog.alert("请选择正在使用的资产！");
+                }
+            });
+            if (count > 0) {
+                strID = strID.substring(0, strID.length-1);
+                top.zDialog.OpenPage({
+                    width: 300,
+                    height: 200,
+                    url: "/Manage/zcdb?StrID=" + strID,
+                    title: "资产调拨",
+                    Callback: function (data) {
+                        Search();
+                    }
+                });
+            }
+        } else {
+            top.Dialog.alert("请选择要领用的资产！");
+        }
+    }
+    //资产报废
+    function Scrap() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            var suc = 0, err = 0;
+            $.each(objs, function (i, obj) {
+                if (obj.StatusCode == "002") {
+                    $.post("InventoryScrap", obj, function (data) {
+                        if (data > 0) {
+                            suc++;//top.Dialog.alert("报废成功！");
+                        } else {
+                            err--;//top.Dialog.alert("报废失败！");
+                        }
+                    });
+                } else {
+                    top.Dialog.alert("请报废正在使用的资产！");
+                }
+            });
+            if (err < 0) {
+                top.Dialog.alert("报废成功：" + suc + "条，失败：" + "条");
+            } else {
+                Search();
+                top.Dialog.alert("全报废成功");
+            }
+        } else {
+            top.Dialog.alert("请选择要报废的资产！");
+        }
+    }
+    //报废资产重用
+    function Reuse() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            var suc = 0, err = 0;
+            $.each(objs, function (i, obj) {
+                if (obj.StatusCode == "003") {
+                    $.post("InventoryReuse", obj, function (data) {
+                        if (data > 0) {
+                            suc++; //top.Dialog.alert("重用成功！");
+                        } else {
+                            err--;//top.Dialog.alert("重用失败！");
+                        }
+                    });
+                } else {
+                    top.Dialog.alert("请重用已报废的资产！");
+                }
+            });
+            if (err < 0) {
+                top.Dialog.alert("重用成功：" + suc + "条，失败：" + "条");
+            } else {
+                Search();
+                top.Dialog.alert("全重用成功");
+            }
+        } else {
+            top.Dialog.alert("请选择要重用的资产！");
+        }
+    }
+    //标签打印
+    function Print() {
+        /*var strHTML = document.getElementsByTagName("html")[0].innerHTML;
+        LODOP.PRINT_INITA(1, 1, 770, 660, "测试预览功能");
+        LODOP.ADD_PRINT_TEXT(10, 60, 300, 200, "这是测试的纯文本，下面是超文本:");
+        LODOP.ADD_PRINT_HTM(30, 5, "100%", "80%", strHTML);
+        LODOP.PREVIEW();*/
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length == 1) {
+            var obj = objs[0];
+
+            var LODOP = getLodop();
+            //X、初始化并设置打印任务名
+            LODOP.PRINT_INIT("打印标签");
+            //1、画边框
+            LODOP.ADD_PRINT_RECT(10, 10, 600, 400, 0, 1);
+            //2、设置基本打印风格
+            //LODOP.SET_PRINT_STYLE("FontSize", 11);
+            //3、打印标签头
+            LODOP.ADD_PRINT_TEXT(20,250,200,50, "JFP固定资产标签");
+            //4、设置标签头的打印风格
+            //LODOP.SET_PRINT_STYLEA(2, "FontName", "隶书");
+            //LODOP.SET_PRINT_STYLEA(2, "FontSize", 15);
+            //5、下面打印其他信息(用基本风格)
+            LODOP.ADD_PRINT_TEXT(50, 140, 200, 20, "资产编码:" + obj.BarCode);
+            LODOP.ADD_PRINT_TEXT(50, 350, 200, 20, "资产名称:" + obj.Name);
+            LODOP.ADD_PRINT_TEXT(80, 140, 200, 20, "资产类型:" + obj.CategoryName);
+            LODOP.ADD_PRINT_TEXT(80, 350, 200, 20, "增加时间:" + obj.AddTime);
+            LODOP.ADD_PRINT_TEXT(110, 140, 200, 20, "使用部门:" + obj.DepartmentName);
+            LODOP.ADD_PRINT_TEXT(110, 350, 200, 20, "备注:" + obj.Note);
+            //条形码
+            LODOP.ADD_PRINT_BARCODE(140, 210, 200, 50, "128A", obj.BarCode);
+            //二维码
+            //LODOP.ADD_PRINT_BARCODE(140, 210, 200, 50, "QRCode", obj.BarCode);
+            //打印预览
+            LODOP.PREVIEW();
+        } else {
+            top.Dialog.alert("请选择一条数据！");
+        }
+    }
+
+    $(document).ready(function () {
+        SelectLoad();
+        DataLoad();
+    });
+</script>

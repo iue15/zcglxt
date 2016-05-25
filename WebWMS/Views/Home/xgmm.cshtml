@@ -1,0 +1,50 @@
+﻿@{
+    ViewBag.Title = "xgmm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" style="width:100%;height:100%;padding:10px;">
+    <table>
+        <tr>
+            <td align="right">原密码</td>
+            <td>
+                <input id="OldPassword" />
+            </td>
+        </tr>
+        <tr>
+            <td align="right">新密码</td>
+            <td>
+                <input id="NewPassword" />
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td align="right">
+                <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="Save()">保存</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<script type="text/javascript">
+    //保存
+    function Save() {
+        var Params = {};
+        Params.OldPassword = $("#OldPassword").val();
+        Params.NewPassword = $("#NewPassword").val();
+        $.post("ChangePassword?", Params, function (data) {
+            if (data > 0) {
+                top.Dialog.alert("修改成功！");
+                //top.Dialog.close();
+                //window.location.href = '/Login/Index';//重新登录
+            } else if (data < 0) {
+                top.Dialog.alert("修改失败");
+            } else {
+                top.Dialog.alert("原密码不正确，不允许修改！");
+            }
+        });
+    }
+
+    //$(document).ready(function () {});
+
+</script>

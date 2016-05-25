@@ -1,0 +1,100 @@
+﻿@{
+    ViewBag.Title = "EasyUI_Dialog";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="dd"></div>
+<div style="margin:20px 0;">
+    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="show()">Open</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="$('#dlg').dialog('close')">Close</a>
+</div>
+
+<script type="text/javascript">
+    function show()
+    {
+        var url_str = '/Base/zczt_add?Code=001';
+        $('#dd').load(url_str, function () {
+            $(this).dialog({
+                title: '设备详细',
+                width: 300,
+                height: 200,
+                modal: true,
+                loadingMessage: '正在加载...',
+                buttons: [ {
+                    text: '关闭',
+                    handler: function () {
+                        $('#dd').dialog('close');
+                    }
+                }]
+            });
+        }).show();
+    }
+</script>
+
+<!--<div id="dlg1">
+    Content
+</div>
+
+
+<div style="margin:20px 0;">
+    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="$('#dlg').dialog('open')">Open</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="$('#dlg').dialog('close')">Close</a>
+</div>
+<div id="dlg" class="easyui-dialog" title="Complex Toolbar on Dialog" style="width:400px;height:200px;padding:10px"
+     data-options="
+				iconCls: 'icon-save',
+				toolbar: '#dlg-toolbar',
+				buttons: '#dlg-buttons'
+			">
+    The dialog content.
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        $('#dlg1').dialog({
+            title: '对话框',
+            iconCls: "icon-edit",
+            collapsible: true,
+            minimizable: true,
+            maximizable: true,
+            resizable: true,
+            width: 300,
+            height: 200,
+            modal: true,
+            href: "Content.aspx",
+            onClose: function () {
+                alert("Close");
+            },
+            toolbar: [{
+                text: 'Add',
+                iconCls: 'icon-add',
+                handler: function () {
+                    alert('add');
+                }
+            }, '-', {
+                text: 'Save',
+                iconCls: 'icon-save',
+                handler: function () {
+                    alert('save');
+                }
+            }],
+            buttons: [{
+                text: 'Ok',
+                iconCls: 'icon-ok',
+                handler: function () {
+                    alert('ok');
+                }
+            }, {
+                text: 'Cancel',
+                iconCls: 'icon-cancel',
+                handler: function () {
+                    $('#dlg').dialog('close');
+                }
+            }]
+        });
+    });
+</script>
+-->
+
+
+

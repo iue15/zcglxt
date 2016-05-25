@@ -1,0 +1,231 @@
+﻿@{
+    ViewBag.Title = "新增盘点单";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" style="width:100%;height:90px;padding:10px;">
+    <table>
+        <tr>
+            <td style="width:6%" align="right">任务名称</td>
+            <td style="width:6%"><input id="TaskName" /></td>
+            <td style="width:6%" align="right">盘点部门</td>
+            <td style="width:10%">
+                <select id="Department" style="width:70%"></select>
+            </td>
+            <td style="width:6%" align="right">操&nbsp;作&nbsp;员</td>
+            <td style="width:10%">
+                <select id="Employer" style="width:100%"></select>
+            </td>
+        </tr>
+        <tr>
+            <td align="right">截止日期</td>
+            <td>
+                <input id="EndDate" class="easyui-datebox" data-options="sharedCalendar:'#cc'" value="@DateTime.Now.AddMonths(1);">
+            </td>
+            <td align="right">说&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;明</td>
+            <td><input id="Note"/></td>
+            <td align="right">
+                <a id="Save" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'" onclick="Save()">保存</a>
+            </td>
+            <td align="left">
+                <a id="Select" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="Select()" style="display:none">选择</a>
+            </td>
+        </tr>
+    </table>
+</div>
+<div id="cc" class="easyui-calendar"></div>
+<div>
+    <div id="ShowGrid" style="width:100%;padding:10px;"></div>
+</div>
+
+<script type="text/javascript">
+
+    var Columns = [
+        { field: 'ck', checkbox: true },   //选择
+        //{ title: 'ID', field: 'ID', width: 40, sortable: true },  //主键
+        { title: '资产编码', field: 'Code', width: 80, sortable: true },
+        { title: '资产名称', field: 'Name', width: 80, sortable: true },
+        { title: '资产条码', field: 'BarCode', width: 80, sortable: true },
+        { title: '使用部门', field: 'DepartmentName', width: 100, sortable: true },
+        { title: '库存数量', field: 'InventoryQuantity', width: 100, sortable: true },      
+        { title: '盘点人', field: 'CheckUser', width: 120, sortable: true },
+        { title: '盘点状态', field: 'Note', width: 120, sortable: true },
+        { title: '实际数量', field: 'ActualQuantity', width: 120, sortable: true },
+        { title: '盘点时间', field: 'CheckTime', width: 120, sortable: true }
+    ];
+
+    //实现对DataGird控件的绑定操作
+    function DataLoad(Params) {
+        var Params = {};
+        Params.BillID = GID;
+
+        $('#ShowGrid').datagrid({   //定位到Table标签，Table标签的ID是grid
+            title: '盘点清单',
+            iconCls: 'icon-view',
+            height: 500,
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: '/Shared/GetCheckItems',
+            //idField: 'ID',//配置idField设置数据中哪列为主键列时注意一定要配置正确，要不当勾选了一条记录后，当点击导航的上一页，下一页进行翻页或者刷新时，重新加载进入datagrid的数据会全部被勾选
+            columns: [Columns],
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 10,
+            rownumbers: true,
+            queryParams: Params,
+            toolbar: [{
+                text: '查询',
+                iconCls: 'icon-search',
+                handler: function () {
+                    Search();
+                }
+            }, {
+                text: '删除',
+                iconCls: 'icon-cancel',
+                handler: function () {
+                    Delete();
+                }
+            }]
+        });
+
+
+    }
+
+    //查询
+    function Search() {
+        var Params = {};
+        Params.BillID = GID;
+
+        //重新加载datagrid的数据
+        $("#ShowGrid").datagrid("reload", Params);
+    }
+
+    function SelectLoad() {
+        //部门
+        $.post("/Shared/GetDepartment?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Department").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //使用人
+        $.post("/Shared/GetEmployer?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Employer").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+    }
+
+    //选择盘点资产
+    function Select() {
+        top.zDialog.OpenPage({
+            width: 1024,
+            height: 768,
+            url: "/Manage/zcpd_select?BillID=" + GID + "&DepartmentCode=" + $("#Department").val(),
+            title: "选择盘点资产",
+            Callback: function (data) {
+                Search();
+            }
+        });
+    }
+
+    //保存盘点单（主表）
+    function Save() {
+        var Params = {};
+        Params.TaskName = $("#TaskName").val();
+        Params.DepartmentCode = $("#Department").val();
+        //Params.OperatorName = $("#Employer").find("option:selected").text();
+        Params.OperatorCode = $("#Employer").val();
+        Params.EndDate = $("#EndDate").datebox("getValue");
+        Params.Note = $("#Note").val();
+        if (Edit == 0) {
+            Params.ID = 0;
+            $("#Select").show();
+        } else {
+            Params.ID = GID;
+        }
+        $.post("CheckInsertOrUpdate?", Params, function (data) {
+            if (data >= 0) {
+                top.Dialog.alert("保存成功！");
+                //$("Department").attr("disabled", true);
+                //$("Employer").attr("disabled", true);
+                if(data>0){
+                    GID = data;//新增完成后返回ID，作为CheckItems新增的依据！
+                    Edit == 1;//下次便进行更新操作
+                }
+                Search();
+            } else {
+                top.Dialog.alert("保存失败");
+            }
+            //top.zDialog.ClosePage(getUrlParam("PageID"), data);
+        });
+    }
+
+    //删除-只能删除未盘点的
+    function Delete() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            //var suc = 0, err = 0;
+            $.each(objs, function (i, obj) {
+                if (obj.Note == "未盘点") {
+                    top.Dialog.confirm("确定删除？", function () {
+                        var success = 0, error = 0;
+                        $.post("CheckItemsDelete?", { ID: obj.ID }, function (data) {
+                            if (data > 0) {
+                                Search();
+                                top.Dialog.alert("删除成功");//suc++;//
+                            } else {
+                                top.Dialog.alert("删除失败");//err--;//
+                            }
+                        });
+                    });
+                } else {
+                    top.Dialog.alert("已盘点的数据不可以删除，请重新选择未盘点的数据！");
+                }
+            });
+            /*if (err < 0) {
+                top.Dialog.alert("成功删除：" + suc + "条，失败：" + "条");
+            } else {
+                top.Dialog.alert("全删除成功");
+            }*/
+        } else {
+            top.Dialog.alert("请选择要删除的数据！");
+        }
+    }
+
+    var GID = 0, Edit = "";
+    $(document).ready(function () {
+        SelectLoad();        
+
+        //Edit = $.url.param("Edit");
+        //var url = window.location.href;
+        Edit = getUrlParam('Edit');
+        if (Edit == 1) {
+            GID = getUrlParam('GID');
+            $.post("/Shared/GetCheck?", { GID: GID }, function (data) {
+                var obj = $.parseJSON(data);
+                $("#TaskName").val(obj.TaskName);
+                $("#EndDate").datebox("setValue", obj.EndDate);
+                $("#Note").val(obj.Note);
+                $("#Department").val(obj.DepartmentCode);
+                $("#Employer").val(obj.OperatorCode);
+                //$("#Department").setAttribute("value", obj.DepartmentCode);
+                //$("#Department").setAttribute("text", obj.DepartmentName);
+                //$("#Employer").options.add(new Option(obj.OperatorName, obj.OperatorCode));
+            });
+            $("#Select").show();
+        } //else {
+            //SelectLoad();
+        //}
+
+        DataLoad();
+    });
+
+    
+</script>
+

@@ -1,0 +1,140 @@
+﻿@{
+    ViewBag.Title = "资产增加报表";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" title="资产增加报表" style="width:100%;height:110px;padding:10px;">
+    <table>
+        <tr>
+            <td style="width:6%" align="right">关&nbsp;键&nbsp;字</td>
+            <td style="width:6%"><input id="KeyWord" /></td>
+            <td style="width:6%" align="right">起始时间</td>
+            <td style="width:10%">
+                <input id="StartTime" class="easyui-datebox" data-options="sharedCalendar:'#cc'" value="@DateTime.Now.AddMonths(-1);">
+            </td>
+            <td style="width:6%" align="right">截止时间</td>
+            <td style="width:10%">
+                <input id="EndTime" class="easyui-datebox" data-options="sharedCalendar:'#cc'" value="@DateTime.Now">
+            </td>
+        </tr>
+        <tr>
+            <td align="right">资产类别</td>
+            <td>
+                <select id="Category" style="width:77%"><option value="">全部</option></select>
+            </td>
+            <td align="right">使用部门</td>
+            <td>
+                <select id="Department" style="width:68%"><option value="">全部</option></select>
+            </td>
+            <td align="right">增加方式</td>
+            <td>
+                <select id="AddMode" style="width:68%"><option value="">全部</option></select>
+            </td>
+        </tr>
+    </table>
+</div>
+<div id="cc" class="easyui-calendar"></div>
+<div>
+    <div id="ShowGrid" style="width:100%;padding:10px;"></div>
+</div>
+
+<script type="text/javascript">
+
+    var Columns = [
+        { field: 'ck', checkbox: true },   //选择
+        //{ title: 'ID', field: 'ID', width: 40, sortable: true },  //主键
+        { title: '资产编码', field: 'Code', width: 80, sortable: true },
+        { title: '资产名称', field: 'Name', width: 100, sortable: true },
+        { title: '资产条码', field: 'BarCode', width: 120, sortable: true },
+        { title: '资产规格', field: 'ChartNumber', width: 100, sortable: true },
+        { title: '资产类型', field: 'CategoryName', width: 100, sortable: true },
+        { title: '资产状态', field: 'StatusName', width: 100, sortable: true },
+        { title: '增加人', field: 'OperatorName', width: 80, sortable: true },
+        { title: '资产数量', field: 'Quantity', width: 60, sortable: true },
+        { title: '使用部门', field: 'DepartmentName', width: 100, sortable: true },
+        { title: '使用人', field: 'UserName', width: 80, sortable: true },
+        { title: '存放位置', field: 'StorageName', width: 100, sortable: true },
+        { title: '单位', field: 'MeasureName', width: 100, sortable: true },
+        { title: '资产原值', field: 'Price', width: 80, sortable: true },
+        { title: '增加方式', field: 'AddModeName', width: 100, sortable: true },
+        { title: '使用年限', field: 'LimitYear', width: 60, sortable: true },
+        { title: '添加时间', field: 'AddTime', width: 120, sortable: true },
+        { title: '备注', field: 'Note', width: 120, sortable: true }
+    ];
+
+    //实现对DataGird控件的绑定操作
+    function DataLoad(Params) {
+        var Params = {};
+        Params.KeyWord = $("#KeyWord").val();
+        Params.CategoryCode = $("#Category").val();
+        Params.DepartmentCode = $("#Department").val();
+        Params.AddModeCode = $("#AddMode").val();
+        Params.StartTime = $("#StartTime").datebox("getValue");
+        Params.EndTime = $("#EndTime").datebox("getValue");
+
+        $('#ShowGrid').datagrid({
+            //title: '资产增加报表',
+            iconCls: 'icon-view',
+            height: 380,
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: '/Shared/GetInventoryForStatistics',
+            columns: [Columns],
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 10,
+            rownumbers: true,
+            queryParams: Params,
+            toolbar: [{
+                text: '查询',
+                iconCls: 'icon-search',
+                handler: function () {
+                    Search();
+                }
+            }]
+        });
+    }
+
+    //查询
+    function Search() {
+        var queryParams = {};
+        queryParams.KeyWord = $("#KeyWord").val();
+        queryParams.CategoryCode = $("#Category").val();
+        queryParams.DepartmentCode = $("#Department").val();
+        queryParams.AddModeCode = $("#AddMode").val();
+        queryParams.StartTime = $("#StartTime").datebox("getValue");
+        queryParams.EndTime = $("#EndTime").datebox("getValue");
+        $("#ShowGrid").datagrid("reload", queryParams);
+    }
+
+    function SelectLoad() {
+        //资产类别
+        $.post("/Shared/GetCategory?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Category").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+        //部门
+        $.post("/Shared/GetDepartment?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Department").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+        //增加方式
+        $.post("/Shared/GetAddMode?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#AddMode").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+    }
+
+    $(document).ready(function () {
+        SelectLoad();
+        DataLoad();
+    });
+</script>

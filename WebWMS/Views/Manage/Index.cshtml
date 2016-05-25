@@ -1,0 +1,73 @@
+﻿@{
+    ViewBag.Title = "EasyUI表单验证";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div style="padding:3px 2px;border-bottom:1px solid #ccc">Form Validation</div>
+<form id="ff" method="post">
+    <div>
+        <label for="name">Name:</label>
+        <input class="easyui-validatebox" type="text" name="name" required="true"></input>
+    </div>
+    <div>
+        <label for="email">Email:</label>
+        <input class="easyui-validatebox" type="text" name="email" required="true" validtype="email"></input>
+    </div>
+    <div>
+        <label for="subject">Subject:</label>
+        <input class="easyui-validatebox" type="text" name="subject" required="true"></input>
+    </div>
+    <div>
+        <label for="message">Message:</label>
+        <textarea name="message" style="height:60px;"></textarea>
+    </div>
+    <div>
+        <input type="submit" value="Submit">
+    </div>
+    <div>
+        <input id="cc" name="dept" value="aa">
+    </div>
+    <div>
+        <input class="easyui-combobox"
+               name="language"
+               data-options="
+					url:'/Shared/GetDepartment',
+					method:'get',
+					valueField:'Code',
+					textField:'Name',
+					panelHeight:'auto'
+			">
+    </div>
+    <div>
+        <input id="cc1" class="easyui-combobox" data-options="
+        valueField: 'Code',
+        textField: 'Name',
+        url: '/Shared/GetDepartment',
+        onSelect: function(rec){
+            var url = '/Shared/GetDepartmentEmployer?DepartmentCode='+rec.Code;
+            $('#cc2').combobox('reload', url);
+        }">
+        <input id="cc2" class="easyui-combobox" data-options="valueField:'Code',textField:'Name'">
+    </div>
+</form>
+
+<script type="text/javascript">
+
+    $('#ff').form({
+        url: 'form3_proc.php',
+        onSubmit: function () {
+            return $(this).form('validate');
+        },
+        success: function (data) {
+            $.messager.alert('Info', data, 'info');
+        }
+    });
+
+    $('#cc').combobox({
+        url: '/Shared/GetDepartment',
+        valueField: 'Code',
+        textField: 'Name'
+        //valueField: 'DepartmentCode',
+        //textField: 'DepartmentName'
+    });
+</script>

@@ -1,0 +1,236 @@
+﻿@{
+    ViewBag.Title = "部门管理";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-layout" style="width:100%;height:800px;">
+    <div data-options="region:'west'" title="部门树" style="width:15%;">
+        <div id="tree" class="easyui-tree"></div>
+    </div>
+    <div data-options="region:'center',title:'部门信息',iconCls:'icon-house'" style="width:85%;">
+        <div>
+            &nbsp;关&nbsp;键&nbsp;字<input id="KeyWord" />
+        </div>
+        <div id="ShowGrid"></div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var Columns = [
+        { field: 'ck', checkbox: true },
+        { title: '部门编码', field: 'Code', width: 80, sortable: true },
+        { title: '部门名称', field: 'Name', width: 100, sortable: true },
+        { title: '负责人', field: 'User', width: 100, sortable: true },
+        { title: '职务', field: 'Job', width: 80, sortable: true },
+        { title: '上级部门', field: 'ParentName', width: 100, sortable: true },
+        { title: '备注', field: 'Note', width: 160, sortable: true }
+    ];
+    //实现对DataGird控件的绑定操作
+    function DataLoad() {
+        var Params = {};
+        $('#ShowGrid').datagrid({
+            //title: '部门',
+            iconCls: 'icon-view',
+            height: 400,
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: '/Shared/GetDepartmentByCondition',
+            columns: [Columns],
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 20,//页容量
+            rownumbers: true,
+            queryParams: Params,  //异步查询的参数
+            toolbar: [{
+                text: '查询',
+                iconCls: 'icon-search',
+                handler: function () {
+                    Search();
+                }
+            }, {
+                id: 'btnAdd',
+                text: '新增',
+                iconCls: 'icon-add',
+                handler: function () {
+                    Add();
+                }
+            }, '-', {
+                id: 'btnEdit',
+                text: '编辑',
+                iconCls: 'icon-edit',
+                handler: function () {
+                    Edit();
+                }
+            }/*, '-', {
+                id: 'btnMove',
+                text: '转隶',
+                iconCls: 'icon-remove',
+                handler: function () {
+                    Move();
+                }
+            }*/, '-', {
+                id: 'btnDelete',
+                text: '删除',
+                iconCls: 'icon-cancel',
+                handler: function () {
+                    Delete();
+                }
+            }]
+        });
+    }
+    //查询
+    function Search() {
+        var Params = {};
+        Params.KeyWord = $("#KeyWord").val();
+        //Params.ParentCode = $("#ParentCode").val();
+        //重新加载datagrid的数据
+        $("#ShowGrid").datagrid("reload", Params);
+    }
+    function LoadEmployer(param) {
+        $("#ShowGrid").datagrid("reload", { ParentCode: param });
+    }
+    function TreeLoad() {
+        $('#tree').tree({
+            url: '/Shared/GetDepartment',
+            animate: true,
+            onClick: function (node) {
+                LoadEmployer(node.id);
+            },
+            loadFilter: function (rows) {
+                return convert(rows);
+            }
+        });
+    }
+    function convert(rows) {
+        function exists(rows, ParentCode) {
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i].Code == ParentCode) return true;
+            }
+            return false;
+        }
+        var nodes = [];
+        // get the top level nodes
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (!exists(rows, row.ParentCode)) {
+                nodes.push({
+                    id: row.Code,
+                    text: row.Name
+                });
+            }
+        }
+        var toDo = [];
+        for (var i = 0; i < nodes.length; i++) {
+            toDo.push(nodes[i]);
+        }
+        while (toDo.length) {
+            var node = toDo.shift();	// the parent node
+            // get the children nodes
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                if (row.ParentCode == node.id) {
+                    var child = { id: row.Code, text: row.Name };
+                    if (node.children) {
+                        node.children.push(child);
+                    } else {
+                        node.children = [child];
+                    }
+                    toDo.push(child);
+                }
+            }
+        }
+        return nodes;
+    }
+
+
+    function Add() {
+        top.zDialog.OpenPage({
+            width: 400,
+            height: 240,
+            url: "/Base/bmgl_add?Edit=0",
+            title: "新增",
+            Callback: function (data) {
+                Search();
+                TreeLoad();
+            }
+        });
+    }
+
+    function Edit() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            if (objs.length == 1) {
+                top.zDialog.OpenPage({
+                    width: 400,
+                    height: 240,
+                    url: "/Base/bmgl_add?Edit=1&Code=" + objs[0].Code,
+                    title: "编辑",
+                    Callback: function (data) {
+                        Search();
+                        TreeLoad();
+                    }
+                });
+            } else {
+                top.Dialog.alert("请选择一条部门记录编辑！")
+            }
+        } else {
+            top.Dialog.alert("请选择要编辑的部门！")
+        }
+    }
+
+    function Delete() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            var strCode = "", count = 0;
+            $.each(objs, function (i, obj) {
+                strCode = strCode + obj.Code + ",";
+                count++;
+            });
+            if (count > 0) {
+                strCode = strCode.substring(0, strCode.length - 1);
+                top.Dialog.confirm("确定删除？", function () {
+                    $.post("DepartmentDelete", { StrCode: strCode }, function (data) {
+                        if (data > 0) {
+                            Search();
+                            TreeLoad();
+                            top.Dialog.alert("删除成功！");
+                        } else if (data < 0) {
+                            top.Dialog.alert("删除失败！");
+                        } else {
+                            top.Dialog.alert("已在使用，不能删除！");
+                        }
+                    });
+                });
+            }
+        } else {
+            top.Dialog.alert("请选择要删除的部门！");
+        }
+    }
+
+    function Move() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            if (objs.length == 1) {
+                top.Dialog.open({
+                    Width: 300,
+                    Height: 200,
+                    Title: '转隶',
+                    URL: '/Base/bmgl_move?Code=' + objs[0].Code,
+                    Callback: function (data) { alert(data); }
+                });
+            } else {
+                top.Dialog.alert("请选择一条部门记录转隶！")
+            }
+        } else {
+            top.Dialog.alert("请选择要转隶的部门！")
+        }
+    }
+
+    $(document).ready(function () {
+        DataLoad();
+        TreeLoad();
+    });
+</script>

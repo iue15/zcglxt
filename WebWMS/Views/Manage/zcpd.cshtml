@@ -1,0 +1,331 @@
+﻿@{
+    ViewBag.Title = "资产盘点";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" title="资产盘点" style="width:100%;height:110px;padding:10px;">
+    <table>
+        <tr>
+            <td style="width:6%" align="right">关&nbsp;键&nbsp;字</td>
+            <td style="width:6%"><input id="KeyWord" /></td>
+            <td style="width:6%" align="right">开始时间</td>
+            <td style="width:10%">
+                <!--<input id="StartDate" class="easyui-datebox" data-options="sharedCalendar:'#cc',formatter:myformatter,parser:myparser">-->
+                <input id="StartDate" class="easyui-datebox" data-options="sharedCalendar:'#cc'" value="@DateTime.Now.AddMonths(-1);">
+            </td>
+            <td style="width:6%" align="right">结束时间</td>
+            <td style="width:10%">
+                <input id="EndDate" class="easyui-datebox" data-options="sharedCalendar:'#cc'" value="@DateTime.Now">
+            </td>
+        </tr>
+        <tr>
+            <td style="width:6%" align="right">单据状态</td>
+            <td style="width:10%">
+                <select id="Status" style="width:50%"><option value="">全部</option></select>
+            </td>
+            <td align="right">部&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;门</td>
+            <td>
+                <select id="Department" style="width:50%"><option value="">全部</option></select>
+            </td>
+            <td align="right">操&nbsp;作&nbsp;员</td>
+            <td>
+                <select id="Employer" style="width:50%"><option value="">全部</option></select>
+            </td>
+        </tr>
+    </table>
+</div>
+<div id="cc" class="easyui-calendar"></div>
+<div>
+    <div id="ShowGrid" style="width:100%;padding:10px;"></div>
+</div>
+
+<script type="text/javascript">
+
+    var Columns = [
+        { field: 'ck', checkbox: true },   //选择
+        //{ title: 'ID', field: 'ID', width: 40, sortable: true },  //主键
+        { title: '盘点任务名称', field: 'TaskName', width: 140, sortable: true },
+        { title: '盘点模式', field: 'Mode', width: 120, sortable: true },
+        { title: '资产状态', field: 'StatusName', width: 100, sortable: true },
+        { title: '部门', field: 'DepartmentName', width: 120, sortable: true },
+        { title: '操作员', field: 'OperatorName', width: 100, sortable: true },
+        { title: '库存数量', field: 'InventoryQuantity', width: 120, sortable: true },
+        { title: '实际数量', field: 'ActualQuantity', width: 120, sortable: true },
+        { title: '存放位置', field: 'StorageName', width: 120, sortable: true },
+        { title: '开始时间', field: 'StartDate', width: 120, sortable: true },
+        { title: '结束时间', field: 'EndDate', width: 120, sortable: true },
+        { title: '备注', field: 'Note', width: 120, sortable: true }
+    ];
+
+    //实现对DataGird控件的绑定操作
+    function DataLoad() {
+        var Params = {};
+        Params.KeyWord = $("#KeyWord").val();
+        Params.StatusCode = $("#Status").val();
+        Params.DepartmentCode = $("#Department").val();
+        Params.OperatorCode = $("#Employer").val();
+        Params.StartDate = $("#StartDate").datebox("getValue");
+        Params.EndDate = $("#EndDate").datebox("getValue");
+        $('#ShowGrid').datagrid({   //定位到Table标签，Table标签的ID是grid
+            //title: '资产盘点',
+            iconCls: 'icon-view',
+            height: 400,
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: '/Shared/GetCheckPaging',
+            columns: [Columns],
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 10,//页容量
+            rownumbers: true,
+            queryParams: Params,  //异步查询的参数
+            toolbar: [{
+                text: '查询',
+                iconCls: 'icon-search',
+                handler: function () {
+                    Search();
+                }
+            }, {
+                id: 'btnAdd',
+                text: '新增',
+                iconCls: 'icon-add',
+                handler: function () {
+                    Add();
+                }
+            }, '-', {
+                id: 'btnEdit',
+                text: '编辑',
+                iconCls: 'icon-edit',
+                handler: function () {
+                    Edit();
+                }
+            }, '-', {
+                id: 'btnCheck',
+                text: '盘点',
+                iconCls: 'icon-remove',
+                handler: function () {
+                    Check();
+                }
+            }, '-', {
+                id: 'btnComplete',
+                text: '盘点完成',
+                iconCls: 'icon-ok',
+                handler: function () {
+                    Complete();
+                }
+            }, '-', {
+                id: 'btnDelete',
+                text: '删除',
+                iconCls: 'icon-cancel',
+                handler: function () {
+                    Delete();
+                }
+            }]
+        });
+
+
+    }
+
+    //查询
+    function Search() {
+        var Params = {};
+        Params.KeyWord = $("#KeyWord").val();
+        Params.StatusCode = $("#Status").val();
+        Params.DepartmentCode = $("#Department").val();
+        Params.OperatorCode = $("#Employer").val();
+        Params.StartDate = $("#StartDate").datebox("getValue");
+        Params.EndDate = $("#EndDate").datebox("getValue");
+        //重新加载datagrid的数据
+        $("#ShowGrid").datagrid("reload", Params);//???
+    }
+
+    function SelectLoad() {
+        //单据状态
+        $.post("/Shared/GetAssist?", {ClassCode:"PDZT"},function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Status").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //部门
+        $.post("/Shared/GetDepartment?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Department").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //操作员
+        $.post("/Shared/GetEmployer?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Employer").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+    }
+
+    //新增
+    function Add() {
+        top.zDialog.OpenPage({
+            width: 1024,
+            height: 768,
+            url: "/Manage/zcpd_add?Edit=0",
+            title: "新增盘点单",
+            Callback: function (data) {
+                Search();
+            }
+        });
+    }
+    //编辑
+    function Edit() {
+        //单行选中
+        //var row = $('#ShowGrid').datagrid('getSelected');
+        //if (row){ alert('Item ID:'+row.itemid); }
+        //多行选中
+        //var rows = $('#ShowGrid').datagrid('getSelections');
+        //for (var i = 0; i < rows.length; i++) { ids.push(rows[i].itemid); }
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length == 1) {
+            if (objs[0].StatusCode == 'PDZT001') {
+                top.zDialog.OpenPage({
+                    width: 1024,
+                    height: 768,
+                    url: "/Manage/zcpd_add?Edit=1&GID=" + objs[0].ID,
+                    title: "编辑盘点单",
+                    Callback: function (data) {
+                        Search();
+                    }
+                });
+            } else {
+                top.Dialog.alert("请选择未盘点的单据！");
+            }
+            //Search();//回调重新加载数据
+        } else {
+            top.Dialog.alert("请选择一条单据进行编辑！");
+        }
+    }
+    //盘点
+    function Check() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length == 1) {
+            if (objs[0].StatusCode != 'PDZT003') {
+                top.zDialog.OpenPage({
+                    width: 1024,
+                    height: 768,
+                    url: "/Manage/zcpd_check?BillID=" + objs[0].ID,
+                    title: "盘点",
+                    Callback: function (data) {
+                        Search();
+                    }
+                });
+            } else {
+                top.Dialog.alert("已盘点的单据不能再次盘点！");
+            }
+        } else {
+            top.Dialog.alert("请选择一条单据进行编辑！");
+        }
+    }
+    //删除
+    function Delete() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            //var suc = 0, err = 0;
+            $.each(objs, function (i, obj) {
+                if (obj.StatusCode == "PDZT001") {
+                    top.Dialog.confirm("确定删除？", function () {
+                        $.post("CheckDelete", { ID: obj.ID }, function (data) {
+                            if (data > 0) {
+                                Search();
+                                top.Dialog.alert("删除成功！");//suc++;//
+                            } else {
+                                top.Dialog.alert("删除失败！");//err--;//
+                            }
+                        });
+                    });
+                } else {
+                    top.Dialog.alert("已操作的单据不可以删除，请重新选择未盘点的单据！");
+                }
+            });
+            /*if (err < 0) {
+                top.Dialog.alert("成功删除：" + suc + "条，失败：" + "条");
+            } else {
+                top.Dialog.alert("全删除成功");
+            }*/
+        } else {
+            top.Dialog.alert("请选择要删除的单据！");
+        }
+    }
+    //盘点完成
+    function Complete() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            var suc = 0, err = 0;
+            $.each(objs, function (i, obj) {
+                if (obj.StatusCode == "PDZT002") {
+                    //top.Dialog.confirm("完成盘点？", function () {
+                        $.post("CompleteCheck", { ID: obj.ID }, function (data) {
+                            if (data > 0) {
+                                Search();
+                                top.Dialog.alert("成功完成盘点!");
+                                //suc++;//
+                            } else {
+                                //err--;//
+                                top.Dialog.alert("完成盘点失败!");
+                            }
+                        });
+                    //});
+                } else {
+                    top.Dialog.alert("该单据“未盘点”或“已盘点”，请重新选择“盘点中”的单据！");
+                }
+            });
+            /*if (err < 0) {
+                top.Dialog.alert("成功完成盘点：" + suc + "条，失败：" + "条");
+            } else {
+                Search();
+                top.Dialog.alert("全成功完成盘点");
+            }*/
+        } else {
+            top.Dialog.alert("请选择要完成盘点的单据！");
+        }
+    }
+
+    $(document).ready(function () {
+        SelectLoad();
+        DataLoad();
+
+        //设置时间  
+        ///var curr_time = new Date();
+        //var pre_time = curr_time.getTime() - 24 * 60 * 60 * 1000 * 30;
+        //curr_time=curr_time.getFullYear() + "-" + (curr_time.getMonth() - 1) + "-" + curr_time.getDate()
+
+        ///$("#StartDate").datebox("setValue", myformatter(curr_time));
+        ///$("#StartDate").datebox("setValue", myformatter(pre_time));
+    });
+
+
+    /*function myformatter(date) {
+        var y = date.getFullYear();
+        //var m = date.getMonth() + 1;
+        var m = date.getMonth();
+        var d = date.getDate();
+        return y + '-' + (m < 10 ? ('0' + m) : m) + '-' + (d < 10 ? ('0' + d) : d);
+    }
+
+    function myparser(s) {
+        if (!s) return new Date();
+        var ss = (s.split('-'));
+        var y = parseInt(ss[0], 10);
+        var m = parseInt(ss[1], 10);
+        var d = parseInt(ss[2], 10);
+        if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+            return new Date(y, m, d);
+            //return new Date(y, m - 1, d);
+        } else {
+            return new Date();
+        }
+    }*/
+</script>

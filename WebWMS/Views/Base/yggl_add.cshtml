@@ -1,0 +1,91 @@
+﻿@{
+    ViewBag.Title = "yggl_add";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" style="width:100%;height:100%;padding:10px;">
+    <table>
+        <tr>
+            <td style="width:15%"></td>
+            <td align="right">所属部门</td>
+            <td>
+                <input id="Department" class="easyui-combobox" data-options="
+                    valueField: 'Code',
+                    textField: 'Name',
+                    url: '/Shared/GetDepartment'">
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td align="right">职员名称</td>
+            <td>
+                <input id="Name" />
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td align="right">职务</td>
+            <td>
+                <input id="Job" />
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td align="right">备注</td>
+            <td>
+                <input id="Note" />
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td align="right">
+                <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="Save()">保存</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<script type="text/javascript">
+    //保存
+    function Save() {
+        var Params = {};
+        Params.DepartmentCode = $('#Department').combobox('getValue');
+        Params.Name = $("#Name").val();
+        Params.Job = $("#Job").val();
+        Params.Note = $("#Note").val();
+        if (Edit == 0) {
+            Params.Code = "";
+        } else {
+            Params.Code = Code;
+        }
+        $.post("EmployerInsertOrUpdate?", Params, function (data) {
+            if (data >= 0) {              
+                top.Dialog.alert("保存成功！");
+                if (data > 0) {
+                    Edit == 1;//下次便进行更新操作
+                }
+            } else {
+                top.Dialog.alert("保存失败");
+            }
+            //parentDialog.close();
+            top.zDialog.ClosePage(getUrlParam("PageID"), data);
+        });
+    }
+
+    var Code = "", Edit = "";
+    $(document).ready(function () {
+        Edit = getUrlParam("Edit");
+        if (Edit == 1) {
+            Code = getUrlParam("Code");
+            $.post("/Shared/GetEmployerByCode?", { Code: Code }, function (data) {
+                var obj = $.parseJSON(data);
+                $('#Department').combobox('setValue', obj.DepartmentCode);
+                $("#Name").val(obj.Name);
+                $("#Job").val(obj.Job);
+                $("#Note").val(obj.Note);
+            });
+        }
+    });
+
+</script>

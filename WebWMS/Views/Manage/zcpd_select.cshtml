@@ -1,0 +1,235 @@
+﻿@{
+    ViewBag.Title = "盘点选择";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" style="width:100%;height:80px;padding:10px;">
+    <table>
+        <tr>
+            <td style="width:6%" align="right">关&nbsp;键&nbsp;字</td>
+            <td style="width:6%"><input id="KeyWord" /></td>
+            <td style="width:6%" align="right">资产状态</td>
+            <td style="width:10%">
+                <select id="Status" style="width:100%"><option value="">全部</option></select>
+            </td>
+            <td style="width:6%" align="right">资产类别</td>
+            <td style="width:10%">
+                <select id="Category" style="width:100%"><option value="">全部</option></select>
+            </td>
+            <td style="width:6%" align="right">计量单位</td>
+            <td style="width:10%">
+                <select id="Measure" style="width:100%"><option value="">全部</option></select>
+            </td>
+        </tr>
+        <tr>
+            <td align="right">部&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;门</td>
+            <td>
+                <select id="Department" style="width:85%" disabled="disabled"><option value="">全部</option></select>
+            </td>
+            <td align="right">使&nbsp;用&nbsp;人</td>
+            <td>
+                <select id="Employer" style="width:100%"><option value="">全部</option></select>
+            </td>
+            <td align="right">存放位置</td>
+            <td>
+                <select id="Storage" style="width:100%"><option value="">全部</option></select>
+            </td>
+            <td align="right">增加方式</td>
+            <td>
+                <select id="AddMode" style="width:100%"><option value="">全部</option></select>
+            </td>
+        </tr>
+    </table>
+</div>
+<div>
+    <div id="ShowGrid" style="width:100%;padding:10px;"></div>
+</div>
+
+<script type="text/javascript">
+
+    var Columns = [
+        { field: 'ck', checkbox: true },   //选择
+        //{ title: 'ID', field: 'ID', width: 40, sortable: true },  //主键
+        { title: '资产编码', field: 'Code', width: 80, sortable: true },
+        { title: '资产名称', field: 'Name', width: 80, sortable: true },
+        { title: '资产条码', field: 'BarCode', width: 80, sortable: true },
+        { title: '资产规格', field: 'ChartNumber', width: 100, sortable: true },
+        { title: '资产类型', field: 'CategoryName', width: 100, sortable: true },
+        { title: '资产状态', field: 'StatusName', width: 120, sortable: true },
+        { title: '增加人', field: 'OperatorName', width: 120, sortable: true },
+        { title: '资产数量', field: 'Quantity', width: 120, sortable: true },
+        { title: '使用人', field: 'UserName', width: 120, sortable: true },
+        { title: '存放位置', field: 'StorageName', width: 120, sortable: true },
+        { title: '单位', field: 'MeasureName', width: 120, sortable: true },
+        { title: '资产原值', field: 'Price', width: 120, sortable: true },
+        { title: '增加方式', field: 'AddModeName', width: 120, sortable: true },
+        { title: '使用年限', field: 'LimitYear', width: 120, sortable: true },
+        { title: '添加时间', field: 'AddTime', width: 120, sortable: true },
+        { title: '备注', field: 'Note', width: 120, sortable: true }
+    ];
+
+    //实现对DataGird控件的绑定操作
+    function DataLoad(Params) {
+        var Params = {};
+        Params.KeyWord = $("#KeyWord").val();
+        Params.StatusCode = $("#Status").val();
+        Params.CategoryCode = $("#Category").val();
+        Params.MeasureCode = $("#Measure").val();
+        Params.DepartmentCode = DepartmentCode;
+        Params.EmployerCode = $("#Employer").val();
+        Params.StorageCode = $("#Storage").val();
+        Params.AddModeCode = $("#AddMode").val();
+
+        $('#ShowGrid').datagrid({   //定位到Table标签，Table标签的ID是grid
+            title: '资产信息',
+            iconCls: 'icon-view',
+            height: 400,
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: '/Shared/GetInventory',
+            columns: [Columns],
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 10,//页容量
+            rownumbers: true,
+            queryParams: Params,  //异步查询的参数
+            toolbar: [{
+                text: '查询',
+                iconCls: 'icon-search',
+                handler: function () {
+                    Search();
+                }
+            }, {
+                text: '保存',
+                iconCls: 'icon-save',
+                handler: function () {
+                    Save();
+                }
+            }]
+        });
+    }
+
+    //查询
+    function Search() {
+        LoadDepartment();
+        var queryParams = {};
+        queryParams.KeyWord = $("#KeyWord").val();
+        queryParams.StatusCode = $("#Status").val();
+        queryParams.CategoryCode = $("#Category").val();
+        queryParams.MeasureCode = $("#Measure").val();
+        queryParams.DepartmentCode = $("#Department").val();
+        queryParams.EmployerCode = $("#Employer").val();
+        queryParams.StorageCode = $("#Storage").val();
+        queryParams.AddModeCode = $("#AddMode").val();
+        //重新加载datagrid的数据
+        $("#ShowGrid").datagrid("reload", queryParams);//???
+    }
+
+    function SelectLoad() {
+        //资产状态
+        $.post("/Shared/GetStatus?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Status").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //资产类别
+        $.post("/Shared/GetCategory?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Category").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //计量单位
+        $.post("/Shared/GetMeasure?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Measure").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //部门
+        $.post("/Shared/GetDepartment?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Department").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //使用人
+        $.post("/Shared/GetEmployer?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Employer").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //存放位置
+        $.post("/Shared/GetStorage?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Storage").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //增加方式
+        $.post("/Shared/GetAddMode?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#AddMode").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+    }
+
+    //保存盘点数据
+    function Save() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        var Params = {};
+        if (objs.length > 0) {
+            var suc = 0, err = 0;
+            $.each(objs, function (i, obj) {
+                Params.BillID = BillID;
+                Params.Code = obj.Code;
+                Params.BarCode = obj.BarCode;
+                Params.DepartmentCode = obj.DepartmentCode;
+                Params.InventoryQuantity = obj.Quantity;
+                Params.Note = obj.Note;
+                $.post("CheckItemsInsert?", Params, function (data) {
+                    if (data >= 0) {
+                        suc++;//top.Dialog.alert("保存成功!");
+                    } else {
+                        err--;//top.Dialog.alert("保存失败!");
+                    }
+                });             
+            });
+            if (err < 0) {
+                top.Dialog.alert("保存成功：" + suc + "条，失败：" + "条");
+            } else {
+                Search();
+                top.Dialog.alert("全保存成功");
+                //top.zDialog.ClosePage(getUrlParam("PageID"), data);
+            }
+        } else {
+            top.Dialog.alert("请选择数据！");
+        }
+
+    }
+
+    var BillID, DepartmentCode;
+    $(document).ready(function () {
+        BillID = getUrlParam("BillID");
+        DepartmentCode = getUrlParam("DepartmentCode");
+
+        SelectLoad();
+        DataLoad();
+    });
+
+    function LoadDepartment() {
+        $("#Department").val(DepartmentCode);
+    }
+</script>

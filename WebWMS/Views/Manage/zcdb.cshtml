@@ -1,0 +1,73 @@
+﻿@{
+    ViewBag.Title = "资产调拨";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" style="width:100%;height:100%;padding:10px;">
+    <table>
+        <tr>
+            <td align="right">调入部门</td>
+            <td>
+                <input id="Department" class="easyui-combobox" data-options="
+                    valueField: 'Code',
+                    textField: 'Name',
+                    url: '/Shared/GetDepartment',
+                    onSelect: function(rec){
+                        var url = '/Shared/GetDepartmentEmployer?DepartmentCode='+rec.Code;
+                        $('#Employer').combobox('reload', url);}">
+            </td>
+        </tr>
+        <tr>
+            <td align="right">使&nbsp;用&nbsp;人</td>
+            <td>
+                <input id="Employer" class="easyui-combobox" data-options="valueField:'Code',textField:'Name'">
+            </td>
+        </tr>
+        <tr>
+            <td align="right">存放位置</td>
+            <td>
+                <input id="Storage" class="easyui-combobox" data-options="
+                    valueField: 'Code',
+                    textField: 'Name',
+                    url: '/Shared/GetStorage'">
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td align="right">
+                <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="Save()">保存</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<script type="text/javascript">
+    //保存
+    function Save() {
+        //parentDialog.close({param:"haha"});
+        var Params = {};
+        Params.StrID = getUrlParam("StrID");
+        Params.DepartmentCode = $('#Department').combobox('getValue');
+        Params.UserCode = $('#Employer').combobox('getValue');
+        Params.StorageCode = $('#Storage').combobox('getValue');
+
+        if (Params.DepartmentCode.length > 0 && Params.UserCode.length > 0 && Params.StorageCode.length > 0) {
+            $.post("InventoryAllot?", Params, function (data) {
+                if (data > 0) {
+                    top.Dialog.alert("保存成功！");
+                } else {
+                    top.Dialog.alert("保存失败！");
+                }
+                top.zDialog.ClosePage(getUrlParam("PageID"), data);
+            });
+        } else {
+            top.Dialog.alert("提示：三项都要选择！");
+        }
+
+    }
+
+    //$(document).ready(function () { SelectLoad(); });
+
+</script>
+
+

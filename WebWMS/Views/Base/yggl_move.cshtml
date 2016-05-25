@@ -1,0 +1,57 @@
+﻿@{
+    ViewBag.Title = "yggl_move";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" style="width:100%;height:100%;padding:10px;">
+    <table>
+        <tr>
+            <td align="right">新部门</td>
+            <td>
+                <input id="Department" class="easyui-combobox" data-options="
+                    valueField: 'Code',
+                    textField: 'Name',
+                    url: '/Shared/GetDepartment'">
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td align="right">
+                <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="Save()">保存</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<script type="text/javascript">
+    //保存
+    function Save() {
+        var Params = {};
+        Params.DepartmentCode = $('#Department').combobox('getValue');
+        Params.Code = Code
+        $.post("EmployerMove?", Params, function (data) {
+            if (data >= 0) {
+                top.Dialog.alert("保存成功！");
+                if (data > 0) {
+                    Edit == 1;//下次便进行更新操作
+                }
+            } else {
+                top.Dialog.alert("保存失败");
+            }
+            top.zDialog.ClosePage(getUrlParam("PageID"), data);
+        });
+    }
+
+    var Code = "";
+    $(document).ready(function () {
+        Code = getUrlParam("Code");
+        /*$.post("/Shared/GetEmployerByCode?", { Code: Code }, function (data) {
+            var obj = $.parseJSON(data);
+            $('#Department').combobox('setValue', obj.DepartmentCode);
+            $("#Name").val(obj.Name);
+            $("#Job").val(obj.Name);
+            $("#Note").val(obj.Note);
+        });*/
+    });
+
+</script>

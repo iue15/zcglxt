@@ -1,0 +1,285 @@
+﻿@{
+    ViewBag.Title = "资产增加";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class ="easyui-panel" style="width:100%;height:55px;padding:10px;">
+    <table>
+        <tr>
+            <td>关键字</td>
+            <td><input id="KeyWord" /></td>
+            <td>资产类别</td>
+            <td>
+                <select id="Category" style="width:170px"><option value="">全部</option></select>
+            </td>
+            <td>
+                <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="Search()">查询</a>
+            </td>
+        </tr>
+    </table>
+</div>
+<div>
+    <div id="ShowGrid" style="width:100%;padding:10px;"></div>
+</div>
+<div class="easyui-panel" style="width:100%;height:160px;padding:10px;">
+    <form id="myForm" method="post">
+        <table>
+            <tr>
+                <td style="width:6%" align="right">资产名称</td>
+                <td style="width:10%">
+                    <select id="Asset" style="width:80%" disabled="disabled">
+                        <option value=""></option>
+                    </select>
+                </td>
+                <td style="width:6%" align="right">计量单位</td>
+                <td style="width:10%">
+                    <select id="Measure" style="width: 80%" disabled="disabled">
+                        <option value=""></option>
+                    </select>
+                </td>
+                <td style="width:6%" align="right">资产规格</td>
+                <td style="width:10%">
+                    <input id="ChartNumber" disabled="disabled" />
+                </td>
+            </tr>
+            <tr>
+                <td align="right">资产类型</td>
+                <td>
+                    <select id="Category2" style="width: 80%" disabled="disabled">
+                        <option value=""></option>
+                    </select>
+                </td>
+                <td align="right">数&nbsp;&nbsp;&nbsp;&nbsp;量</td>
+                <td>
+                    <input id="Quantity" value="1" class="easyui-numberbox" data-options="min:0,precision:1,required:true">
+                </td>
+                <td align="right">折旧年限</td>
+                <td>
+                    <input id="LimitYear" value="8" class="easyui-numberbox" data-options="min:8,precision:1,required:true">年
+                </td>
+            <tr>
+                <td align="right">资产原值</td>
+                <td>
+                    <input id="OriginalValue" value="0" class="easyui-numberbox" data-options="min:0,precision:2,required:true">元
+                </td>
+                <td align="right">存放地址</td>
+                <td>
+                    <select id="Storage" style="width: 80%" disabled="disabled">
+                        <option value=""></option>
+                    </select>
+                </td>
+                <td align="right">增加方式</td>
+                <td>
+                    <select id="AddMode" style="width: 80%"></select>
+                </td>
+            </tr>
+            <tr>
+                <td align="right">备注</td>
+                <td>
+                    <input id="Note" />
+                </td>
+                <td align="right">
+                    <!--<a id="Save" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'" onclick="Save()" disabled="disabled">保存</a>-->
+                    <input type="submit" value="保存">
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+<script type="text/javascript">
+    //初始化下拉框
+    function SelectLoad() {
+        //资产名称
+        $.post("/Shared/GetAsset?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Asset").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+        //资产类别
+        $.post("/Shared/GetCategory?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Category").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+                $("#Category2").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+        //计量单位
+        $.post("/Shared/GetMeasure?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Measure").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+        //存放地址
+        $.post("/Shared/GetStorage?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Storage").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+        //增加方式
+        $.post("/Shared/GetAddMode?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#AddMode").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+    }
+
+    var Columns = [
+        //{ field: 'ck', checkbox: true },   //选择
+        { title: '资产编码', field: 'Code', width: 80, sortable: true },
+        { title: '资产名称', field: 'Name', width: 80, sortable: true },
+        { title: '资产规格', field: 'ChartNumber', width: 100, sortable: true },
+        { title: '资产类型', field: 'CategoryName', width: 100, sortable: true },
+        { title: '计量单位', field: 'MeasureName', width: 60, sortable: true },
+        { title: '备注', field: 'Note', width: 120, sortable: true }
+    ];
+
+    //实现对DataGird控件的绑定操作
+    function DataLoad() {
+        var Params = {};
+        Params.KeyWord = $("#KeyWord").val();
+        //Params.MeasureCode = $("#Measure1").val();
+        Params.CategoryCode = $("#Category").val();
+        $('#ShowGrid').datagrid({   //定位到Table标签，Table标签的ID是grid
+            title: '资产目录',
+            iconCls: 'icon-view',
+            height: 360,
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: 'GetAsset',
+            columns: [Columns],
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 10,//页容量
+            //pageList: [10,15,20],
+            rownumbers: true,
+            queryParams: Params,  //异步查询的参数
+            singleSelect: true,
+            onClickRow: function (index, row) {
+                SingleClick(index, row);
+            }
+        });
+
+
+    }
+
+    function Search() {
+        //var Params = $('#ShowGrid').datagrid('options').queryParams;
+        var Params = {};
+        Params.KeyWord = $("#KeyWord").val();
+        Params.CategoryCode = $("#Category").val();
+        //重新加载datagrid的数据
+        //$("#ShowGrid").datagrid('reload');
+
+        $("#ShowGrid").datagrid("reload", Params);//也可以使用
+    }
+
+    function SingleClick(index, row) {
+        //$("select").attr("disabled", false);//解锁所有的select控件
+        $('#Save').linkbutton('enable');
+        $("#Asset").val(row.Code);
+        $("#Category2 ").val(row.CategoryCode);
+        $("#Measure ").val(row.MeasureCode);
+        $("#ChartNumber").val(row.ChartNumber);
+
+        $("#Storage").val("009");
+    }
+
+    $('#myForm').form({
+        url: 'InventoryInsert',
+        onSubmit: function (Params) {
+            Params.Code = $("#Asset").val();
+            Params.MeasureCode = $("#Measure").val();
+            Params.ChartNumber = $("#ChartNumber").val();
+            Params.CategoryCode = $("#Category2").val();
+            Params.Quantity = $("#Quantity").val();
+            Params.LimitYear = $("#LimitYear").val();
+            Params.OriginalValue = $("#OriginalValue").val();
+            Params.StorageCode = $("#Storage").val();
+            Params.AddModeCode = $("#AddMode").val();
+            Params.Note = $("#Note").val();
+
+            return $(this).form('validate');
+        },
+        success: function (data) {
+            if ($("#Asset").val.length > 0) {
+                /*var data = eval('(' + data + ')');   // change the JSON string to javascript object   
+                //if (data.success) { alert(data.message) }
+                //else { $.messager.alert('Info', data, 'info'); }
+                if (data > 0) {
+                    $('#Save').linkbutton('disable');
+                    $('#Quantity').numberbox('setValue', 1);
+                    $('#LimitYear').numberbox('setValue', 8);
+                    $('#OriginalValue').numberbox('setValue', 0);
+                    //$("#ChartNumber").val("");
+                    $("#Note").val("");
+                    ///$("#ChartNumber").attr("disabled", "disabled");
+                    top.Dialog.alert("添加成功！");
+                } else {
+                    top.Dialog.alert("添加失败");
+                }
+                top.zDialog.ClosePage(getUrlParam("PageID"), data);*/
+
+                $('#Save').linkbutton('disable');
+                $('#Quantity').numberbox('setValue', 1);
+                $('#LimitYear').numberbox('setValue', 8);
+                $('#OriginalValue').numberbox('setValue', 0);
+                $("#Note").val("");
+                top.Dialog.alert(data);
+            } else {
+                top.Dialog.alert("请先在列表中选择一项资产！")
+            }
+        }
+    });
+
+    function Save() {
+        if ($("#Asset").val.length > 0) {
+            var Params = {};
+            Params.Code = $("#Asset").val();
+            Params.MeasureCode = $("#Measure").val();
+            Params.ChartNumber = $("#ChartNumber").val();
+            Params.CategoryCode = $("#Category2").val();
+            Params.Quantity = $("#Quantity").val();
+            Params.LimitYear = $("#LimitYear").val();
+            Params.OriginalValue = $("#OriginalValue").val();
+            Params.StorageCode = $("#Storage").val();
+            Params.AddModeCode = $("#AddMode").val();
+            Params.Note = $("#Note").val();
+            $.post("InventoryInsert", Params, function (data) {
+                if (data > 0) {
+                    top.Dialog.alert("添加成功！");
+                    $('#Save').linkbutton('disable');
+                    //$("#Quantity").val(1);
+                    //$("#LimitYear").val(8);
+                    //$("#OriginalValue").val(0);
+                    $('#Quantity').numberbox('setValue', 1);
+                    $('#LimitYear').numberbox('setValue', 8);
+                    $('#OriginalValue').numberbox('setValue', 0);
+                    //$("#ChartNumber").val("");
+                    $("#Note").val("");
+                    ///$("#ChartNumber").attr("disabled", "disabled");
+                } else {
+                    top.Dialog.alert("添加失败");
+                }
+                top.zDialog.ClosePage(getUrlParam("PageID"), data);
+            });
+        } else {
+            top.Dialog.alert("请先在列表中选择一项资产！")
+        }
+    }
+
+    function ReloadStorage() {
+        $("#Storage").val("009");
+        //$("#Storage").attr("value","009");
+    }
+    $(document).ready(function () {
+        SelectLoad();
+        DataLoad();
+        //ReloadStorage();
+    });
+</script>

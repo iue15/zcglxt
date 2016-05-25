@@ -1,0 +1,251 @@
+﻿@{
+    ViewBag.Title = "yggl";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-layout" style="width:100%;height:800px;overflow:hidden">
+    <div data-options="region:'west'" title="部门员工树" style="width:15%;">
+        <div id="tree" class="easyui-tree"></div>
+    </div>
+    <div data-options="region:'center',title:'员工信息',iconCls:'icon-user'" style="width:85%;">
+        <div>
+            &nbsp;关&nbsp;键&nbsp;字<input id="KeyWord" />
+        </div>
+        <div id="ShowGrid"></div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var Columns = [
+        { field: 'ck', checkbox: true },
+        { title: '员工编码', field: 'Code', width: 80, sortable: true },
+        { title: '员工名称', field: 'Name', width: 100, sortable: true },
+        { title: '职务', field: 'Job', width: 80, sortable: true },
+        { title: '部门', field: 'DepartmentName', width: 100, sortable: true },
+        { title: '备注', field: 'Note', width: 160, sortable: true }
+    ];
+    //实现对DataGird控件的绑定操作
+    function DataLoad() {
+        var Params = {};
+        $('#ShowGrid').datagrid({
+            //title: '员工',
+            iconCls: 'icon-view',
+            height: 400,
+            width: function () { return document.body.clientWidth * 1 },//自动宽度
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: '/Shared/GetEmployerByCondition',
+            columns: [Columns],
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 20,//页容量
+            rownumbers: true,
+            queryParams: Params,  //异步查询的参数
+            toolbar: [{
+                text: '查询',
+                iconCls: 'icon-search',
+                handler: function () {
+                    Search();
+                }
+            }, {
+                id: 'btnAdd',
+                text: '新增',
+                iconCls: 'icon-add',
+                handler: function () {
+                    Add();
+                }
+            }, '-', {
+                id: 'btnEdit',
+                text: '编辑',
+                iconCls: 'icon-edit',
+                handler: function () {
+                    Edit();
+                }
+            }, '-', {
+                id: 'btnMove',
+                text: '转隶',
+                iconCls: 'icon-remove',
+                handler: function () {
+                    Move();
+                }
+            }, '-', {
+                id: 'btnDelete',
+                text: '删除',
+                iconCls: 'icon-cancel',
+                handler: function () {
+                    Delete();
+                }
+            }]
+        });
+    }
+    //查询
+    function Search() {
+        var Params = {};
+        Params.KeyWord = $("#KeyWord").val();
+        //Params.DepartmentCode = $("#Department").val();
+        //重新加载datagrid的数据
+        $("#ShowGrid").datagrid("reload", Params);
+    }
+    function LoadEmployer(param) {
+        $("#ShowGrid").datagrid("reload", {DepartmentCode:param});
+    }
+    function TreeLoad() {
+        $('#tree').tree({
+            //url:'/Shared/GetDepartment',
+            url: '/Shared/GetDataForTree',
+            animate: true,
+            onClick: function (node) {
+                LoadEmployer(node.id);
+            },
+            loadFilter: function (rows) {
+                return convert(rows);
+            }
+        });
+    }
+    function convert(rows) {
+        function exists(rows, ParentCode) {
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i].Code == ParentCode) return true;
+            }
+            return false;
+        }
+        var nodes = [];
+        // get the top level nodes
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (!exists(rows, row.ParentCode)) {
+                nodes.push({
+                    id: row.Code,
+                    text: row.Name
+                });
+            }
+        }
+        var toDo = [];
+        for (var i = 0; i < nodes.length; i++) {
+            toDo.push(nodes[i]);
+        }
+        while (toDo.length) {
+            var node = toDo.shift();	// the parent node
+            // get the children nodes
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                if (row.ParentCode == node.id) {
+                    var child = { id: row.Code, text: row.Name };
+                    if (node.children) {
+                        node.children.push(child);
+                    } else {
+                        node.children = [child];
+                    }
+                    toDo.push(child);
+                }
+            }
+        }
+        return nodes;
+    }
+
+
+    function Add() {
+        /*top.Dialog.open({
+            Width: 400,
+            Height: 240,
+            Title: '新增',
+            URL: '/Base/yggl_add?Edit=0',
+            Callback: function (data) { alert(data); }
+            //onClose: function () { alert("haha"); }
+        });*/
+        top.zDialog.OpenPage({
+            width: 400,
+            height: 240,
+            url: "/Base/yggl_add?Edit=0",
+            title: "员工新增",
+            Callback: function (data) {
+                Search();
+                TreeLoad();
+            }
+        });
+    }
+
+    function Edit() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            if (objs.length == 1) {
+                top.zDialog.OpenPage({
+                    width: 400,
+                    height: 240,
+                    url: "/Base/yggl_add?Edit=1&Code=" + objs[0].Code,
+                    title: "员工编辑",
+                    Callback: function (data) {
+                        Search();
+                        TreeLoad();
+                    }
+                });
+            } else {
+                top.Dialog.alert("请选择一条员工记录编辑！")
+            }
+        } else {
+            top.Dialog.alert("请选择要编辑的员工！")
+        }
+    }
+
+    function Delete() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            var strCode = "", count = 0;
+            $.each(objs, function (i, obj) {
+                strCode = strCode + obj.Code + ",";
+                count++;
+            });
+            if (count > 0) {
+                strCode = strCode.substring(0, strCode.length - 1);
+                top.Dialog.confirm("确定删除？", function () {
+                    $.post("EmployerDelete", { StrCode: strCode }, function (data) {
+                        if (data > 0) {
+                            Search();
+                            TreeLoad();
+                            top.Dialog.alert("删除成功！");
+                        } else if (data < 0) {
+                            top.Dialog.alert("删除失败！");
+                        } else {
+                            top.Dialog.alert("已在使用，不能删除！");
+                        }
+                    });
+                });
+            }
+        } else {
+            top.Dialog.alert("请选择要删除的员工！");
+        }
+    }
+
+    function Move() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            if (objs.length == 1) {
+                top.zDialog.OpenPage({
+                    width: 300,
+                    height: 140,
+                    //url: '/Base/yggl_move?Code=' + objs[0].Code,
+                    url: "/Base/yggl_move?Code=" + objs[0].Code,
+                    title: "员工转隶",
+                    Callback: function (data) {
+                        Search();
+                        TreeLoad();
+                    }
+                });
+            } else {
+                top.Dialog.alert("请选择一条员工记录转隶！")
+            }
+        } else {
+            top.Dialog.alert("请选择要转隶的员工！")
+        }
+    }
+
+
+
+    $(document).ready(function () {
+        DataLoad();
+        TreeLoad();
+    });
+</script>

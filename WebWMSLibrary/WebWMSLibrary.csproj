@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{707B335E-2397-4CEB-ABAC-069357DB1031}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>WebWMSLibrary</RootNamespace>
+    <AssemblyName>WebWMSLibrary</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BLL\AddMode.cs" />
+    <Compile Include="BLL\Asset.cs" />
+    <Compile Include="BLL\Assist.cs" />
+    <Compile Include="BLL\Category.cs" />
+    <Compile Include="BLL\Check.cs" />
+    <Compile Include="BLL\CheckItems.cs" />
+    <Compile Include="BLL\Dealer.cs" />
+    <Compile Include="BLL\Department.cs" />
+    <Compile Include="BLL\Employer.cs" />
+    <Compile Include="BLL\Inventory.cs" />
+    <Compile Include="BLL\InventoryList.cs" />
+    <Compile Include="BLL\Measure.cs" />
+    <Compile Include="BLL\Menu.cs" />
+    <Compile Include="BLL\OutStock.cs" />
+    <Compile Include="BLL\OutStockItems.cs" />
+    <Compile Include="BLL\Status.cs" />
+    <Compile Include="BLL\Storage.cs" />
+    <Compile Include="BLL\User.cs" />
+    <Compile Include="BLL\wCategory.cs" />
+    <Compile Include="BLL\wDepartmentEmployer.cs" />
+    <Compile Include="ConfigSection.cs" />
+    <Compile Include="DAL\AddModeProvider.cs" />
+    <Compile Include="DAL\AssetProvider.cs" />
+    <Compile Include="DAL\AssistProvider.cs" />
+    <Compile Include="DAL\CategoryProvider.cs" />
+    <Compile Include="DAL\CheckItemsProvider.cs" />
+    <Compile Include="DAL\CheckProvider.cs" />
+    <Compile Include="DAL\DataAccess.cs" />
+    <Compile Include="DAL\DealerProvider.cs" />
+    <Compile Include="DAL\DepartmentProvider.cs" />
+    <Compile Include="DAL\EmployerProvider.cs" />
+    <Compile Include="DAL\InventoryListProvider.cs" />
+    <Compile Include="DAL\InventoryProvider.cs" />
+    <Compile Include="DAL\MeasureProvider.cs" />
+    <Compile Include="DAL\MenuProvider.cs" />
+    <Compile Include="DAL\OutStockItemsProvider.cs" />
+    <Compile Include="DAL\OutStockProvider.cs" />
+    <Compile Include="DAL\SiteProvider.cs" />
+    <Compile Include="DAL\StatusProvider.cs" />
+    <Compile Include="DAL\StorageProvider.cs" />
+    <Compile Include="DAL\UserProvider.cs" />
+    <Compile Include="DAL\wCategoryProvider.cs" />
+    <Compile Include="DAL\wDepartmentEmployerProvider.cs" />
+    <Compile Include="Detail\AddModeDetail.cs" />
+    <Compile Include="Detail\AssetDetail.cs" />
+    <Compile Include="Detail\AssistDetail.cs" />
+    <Compile Include="Detail\CategoryDetail.cs" />
+    <Compile Include="Detail\CheckDetail.cs" />
+    <Compile Include="Detail\CheckItemsDetail.cs" />
+    <Compile Include="Detail\DealerDetail.cs" />
+    <Compile Include="Detail\DepartmentDetail.cs" />
+    <Compile Include="Detail\EmployerDetail.cs" />
+    <Compile Include="Detail\InventoryDetail.cs" />
+    <Compile Include="Detail\InventoryListDetail.cs" />
+    <Compile Include="Detail\MeasureDetail.cs" />
+    <Compile Include="Detail\MenuDetail.cs" />
+    <Compile Include="Detail\OutStockDetail.cs" />
+    <Compile Include="Detail\OutStockItemsDetail.cs" />
+    <Compile Include="Detail\StatusDetail.cs" />
+    <Compile Include="Detail\StorageDetail.cs" />
+    <Compile Include="Detail\UserDetail.cs" />
+    <Compile Include="Detail\wCategoryDetail.cs" />
+    <Compile Include="Detail\wDepartmentEmployerDetail.cs" />
+    <Compile Include="Globals.cs" />
+    <Compile Include="Helpers.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sql\SqlAddModeProvider.cs" />
+    <Compile Include="Sql\SqlAssetProvider.cs" />
+    <Compile Include="Sql\SqlAssistProvider.cs" />
+    <Compile Include="Sql\SqlCategoryProvider.cs" />
+    <Compile Include="Sql\SqlCheckItemsProvider.cs" />
+    <Compile Include="Sql\SqlCheckProvider.cs" />
+    <Compile Include="Sql\SqlDealerProvider.cs" />
+    <Compile Include="Sql\SqlDepartmentProvider.cs" />
+    <Compile Include="Sql\SqlEmployerProvider.cs" />
+    <Compile Include="Sql\SqlInventoryListProvider.cs" />
+    <Compile Include="Sql\SqlInventoryProvider.cs" />
+    <Compile Include="Sql\SqlMeasureProvider.cs" />
+    <Compile Include="Sql\SqlMenuProvider.cs" />
+    <Compile Include="Sql\SqlOutStockItemsProvider.cs" />
+    <Compile Include="Sql\SqlOutStockProvider.cs" />
+    <Compile Include="Sql\SqlStatusProvider.cs" />
+    <Compile Include="Sql\SqlStorageProvider.cs" />
+    <Compile Include="Sql\SqlUserProvider.cs" />
+    <Compile Include="Sql\SqlwCategoryProvider.cs" />
+    <Compile Include="Sql\SqlwDepartmentEmployerProvider.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

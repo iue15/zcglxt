@@ -1,0 +1,65 @@
+﻿@{
+    ViewBag.Title = "jldw_add";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" style="width:100%;height:100%;padding:10px;">
+    <table>
+        <tr>
+            <td align="right">计量单位名称</td>
+            <td>
+                <input id="Name" />
+            </td>
+        </tr>
+        <tr>
+            <td align="right">备注</td>
+            <td>
+                <input id="Note" />
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td align="right">
+                <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="Save()">保存</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<script type="text/javascript">
+    //保存
+    function Save() {
+        var Params = {};
+        Params.Name = $("#Name").val();
+        Params.Note = $("#Note").val();
+        if (Edit == 0) {
+            Params.Code = "";
+        } else {
+            Params.Code = Code;
+        }
+        $.post("MeasureInsertOrUpdate?", Params, function (data) {
+            if (data >= 0) {
+                top.Dialog.alert("保存成功！");
+                if (data > 0) {
+                    Edit == 1;//下次便进行更新操作
+                }
+            } else {
+                top.Dialog.alert("保存失败");
+            }
+        });
+    }
+
+    var Code = "", Edit = "";
+    $(document).ready(function () {
+        Edit = getUrlParam("Edit");
+        if (Edit == 1) {
+            Code = getUrlParam("Code");
+            $.post("/Shared/GetMeasureByCode?", { Code: Code }, function (data) {
+                var obj = $.parseJSON(data);
+                $("#Name").val(obj.Name);
+                $("#Note").val(obj.Note);
+            });
+        }
+    });
+
+</script>

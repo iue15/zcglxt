@@ -1,0 +1,66 @@
+﻿@{
+    ViewBag.Title = "资产流水";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" title="资产流水" style="width:100%;height:80px;padding:10px;">
+    关&nbsp;键&nbsp;字<input id="Note" />
+</div>
+<div>
+    <div id="ShowGrid" style="width:100%;padding:10px;"></div>
+</div>
+
+<script type="text/javascript">
+
+    var Columns = [
+        //{ field: 'ck', checkbox: true },   //选择
+        { title: '资产代码', field: 'BillID', width: 220, sortable: true },
+        { title: '使用部门', field: 'DepartmentName', width: 100, sortable: true },
+        { title: '操作人', field: 'OperatorName', width: 80, sortable: true },
+        { title: '原使用部门', field: 'VenderName', width: 100, sortable: true },
+        { title: '变更时间', field: 'AddTime', width: 160, sortable: true },
+        { title: '事项', field: 'Note', width: 120, sortable: true }
+    ];
+
+    //实现对DataGird控件的绑定操作
+    function DataLoad(Params) {
+        var Params = {};
+        Params.Note = $("#Note").val();
+
+        $('#ShowGrid').datagrid({
+            //title: '资产流水',
+            iconCls: 'icon-view',
+            height: 400,
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: '/Shared/GetInventoryList',
+            columns: [Columns],
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 10,
+            rownumbers: true,
+            queryParams: Params,
+            toolbar: [{
+                text: '查询',
+                iconCls: 'icon-search',
+                handler: function () {
+                    Search();
+                }
+            }]
+        });
+    }
+
+    //查询
+    function Search() {
+        var queryParams = {};
+        queryParams.Note = $("#Note").val();
+        $("#ShowGrid").datagrid("reload", queryParams);
+    }
+
+    $(document).ready(function () {
+        DataLoad();
+    });
+</script>
+

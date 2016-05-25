@@ -1,0 +1,105 @@
+﻿@{
+    ViewBag.Title = "zcgl_edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" style="width:100%;height:100%;padding:10px;">
+    <form id="myForm" method="post">
+        <table>
+            <tr>
+                <td align="right">名&nbsp;&nbsp;&nbsp;&nbsp;称</td>
+                <td>
+                    <input id="Name" disabled="disabled" />
+                </td>
+                <td align="right">规格型号</td>
+                <td>
+                    <input id="ChartNumber" disabled="disabled" />
+                </td>
+                <td align="right">数&nbsp;&nbsp;&nbsp;&nbsp;量</td>
+                <td>
+                    <input id="Quantity" class="easyui-numberbox" data-options="min:0,precision:1,required:true" disabled="disabled">
+                </td>
+            </tr>
+            <tr>
+                <td align="right">折旧年限</td>
+                <td>
+                    <input id="LimitYear" class="easyui-numberbox" data-options="min:8,precision:1,required:true">年
+                </td>
+                <td align="right">资产原值</td>
+                <td>
+                    <input id="OriginalValue" class="easyui-numberbox" data-options="min:0,precision:2,required:true">元
+                </td>
+                <td align="right">存放地址</td>
+                <td>
+                    <input id="Storage" class="easyui-combobox" data-options="
+                    valueField: 'Code',
+                    textField: 'Name',
+                    url: '/Shared/GetStorage'">
+                </td>
+            </tr>
+            <tr>
+                <td align="right">增加方式</td>
+                <td>
+                    <input id="AddMode" class="easyui-combobox" data-options="
+                    valueField: 'Code',
+                    textField: 'Name',
+                    url: '/Shared/GetAddMode'">
+                </td>
+                <td align="right">备&nbsp;&nbsp;&nbsp;&nbsp;注</td>
+                <td>
+                    <input id="Note" />
+                </td>
+                <td></td>
+                <td align="right">
+                    <input type="submit" value="保存">
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+
+<script type="text/javascript">
+    $('#myForm').form({
+        url: 'InventoryUpdate',
+        onSubmit: function (Params) {
+            Params.ID = ID;
+            Params.ChartNumber = $("#ChartNumber").val();
+            Params.Quantity = $("#Quantity").val();
+            Params.LimitYear = $("#LimitYear").val();
+            Params.OriginalValue = $("#OriginalValue").val();
+            Params.StorageCode = $('#Storage').combobox('getValue');
+            Params.AddModeCode = $('#AddMode').combobox('getValue');
+            Params.Note = $("#Note").val();
+
+            return $(this).form('validate');
+        },
+        success: function (data) {
+            var data = eval('(' + data + ')');   // change the JSON string to javascript object   
+            if (data > 0) {
+                top.Dialog.alert("修改成功！");
+                //top.Dialog.close();
+            } else {
+                top.Dialog.alert("添加失败");
+            }
+            top.zDialog.ClosePage(getUrlParam("PageID"), data);
+        }
+    });
+
+    var ID = "";
+    $(document).ready(function () {
+        ID = getUrlParam('ID');
+        $.post("/Shared/GetInventoryByID?", { ID: ID }, function (data) {
+            var obj = $.parseJSON(data);
+            $("#Name").val(obj.Name);
+            $("#ChartNumber").val(obj.ChartNumber);
+            $('#Quantity').numberbox('setValue', obj.Quantity);
+            $('#LimitYear').numberbox('setValue', obj.LimitYear);
+            $('#OriginalValue').numberbox('setValue', obj.OriginalValue);
+            $('#Storage').combobox('setValue', obj.StorageCode);
+            $('#AddMode').combobox('setValue', obj.AddModeCode);
+
+            $('#Storage').combobox('disable');
+            //$("#ChartNumber").attr("disabled","disabled");
+        });
+    });
+</script>

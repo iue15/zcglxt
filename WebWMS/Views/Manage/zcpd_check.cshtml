@@ -1,0 +1,208 @@
+﻿@{
+    ViewBag.Title = "盘点";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" style="width:100%;height:50px;padding:10px;">
+    <table>
+        <tr>
+            <td style="width:6%" align="right">关键字</td>
+            <td style="width:6%"><input id="KeyWord" /></td>
+            <td align="left">
+                <a id="Search" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="Search()">查询</a>
+            </td>
+            <td style="width:6%"></td>
+            <td style="width:6%"></td>
+            <td style="width:6%"></td>
+            <td style="width:6%"></td>
+            <td style="width:6%"></td>
+            <td style="width:6%"></td>
+            <td style="width:6%"></td>
+            <td style="width:6%"></td>
+            <td align="right">
+                <a id="ManualCheck" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'" onclick="ManualCheck()">手工盘点</a>
+                <a id="OneKeyCheck" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'" onclick="OneKeyCheck()">一键盘点</a>
+            </td>
+        </tr>
+    </table>
+</div>
+<div>
+    <div id="ShowGrid" style="width:100%;padding:10px;"></div>
+</div>
+
+<script type="text/javascript">
+
+    var Columns = [
+        //{ field: 'ck', checkbox: true },   //选择
+        //{ title: 'ID', field: 'ID', width: 40, sortable: true },  //主键
+        { title: '资产编码', field: 'Code', width: 80, sortable: true },
+        { title: '资产名称', field: 'Name', width: 80, sortable: true },
+        { title: '资产条码', field: 'BarCode', width: 80, sortable: true },
+        { title: '使用部门', field: 'DepartmentName', width: 100, sortable: true },
+        { title: '盘点状态', field: 'Note', width: 120, sortable: true },
+        { title: '库存数量', field: 'InventoryQuantity', width: 100, sortable: true },
+        {
+            title: '实际数量', field: 'ActualQuantity', width: 120, sortable: true,
+            editor: { type: 'numberbox', options: { precision: 1 } }//, formatter: formatPrice,
+            //styler: function (value, row, index) { return 'background-color:#E0ECFF ;color:black'; }
+        },
+        { title: '盘点人', field: 'CheckUser', width: 120, sortable: true },
+        { title: '盘点时间', field: 'CheckTime', width: 120, sortable: true },
+    ];
+
+    //实现对DataGird控件的绑定操作
+    function DataLoad(param) {
+        var Params = {};
+        Params.BillID = param;
+        $('#ShowGrid').datagrid({   //定位到Table标签，Table标签的ID是grid
+            title: '资产信息',
+            iconCls: 'icon-view',
+            height: 500,
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: '/Shared/GetCheckItemsPaginge',
+            columns: [Columns],
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 10,
+            rownumbers: true,
+            queryParams: Params,
+            onClickCell: onClickCell,
+            onLoadSuccess: function (data) {
+                /*if (data.total > 0)
+                    return;
+                $('#ShowGrid').datagrid('appendRow', {
+                    中间显示的列的字段名称: '没有相关记录'
+                });*/
+                if (data.total > 0) {
+
+                } else {
+                    $("#ManualCheck").linkbutton("disable");
+                    $("#OneKeyCheck").linkbutton("disable");
+                    top.Dialog.alert("没有数据可盘点，请返回编辑盘点单，选择盘点的数据！");
+                }
+            }
+        });
+    }
+
+    //查询
+    function Search() {
+        var Params = {};
+        Params.BillID = BillID;
+        Params.KeyWord = $("#KeyWord").val();
+        $("#ShowGrid").datagrid("reload", Params);
+    }
+
+    $.extend($.fn.datagrid.methods, {
+        editCell: function (jq, param) {
+            return jq.each(function () {
+                var opts = $(this).datagrid('options');
+                var fields = $(this).datagrid('getColumnFields', true).concat($(this).datagrid('getColumnFields'));
+                for (var i = 0; i < fields.length; i++) {
+                    var col = $(this).datagrid('getColumnOption', fields[i]);
+                    col.editor1 = col.editor;
+                    if (fields[i] != param.field) {
+                        col.editor = null;
+                    }
+                }
+                $(this).datagrid('beginEdit', param.index);
+                for (var i = 0; i < fields.length; i++) {
+                    var col = $(this).datagrid('getColumnOption', fields[i]);
+                    col.editor = col.editor1;
+                }
+            });
+        }
+    });
+    var editIndex = undefined;
+    function endEditing() {
+        if (editIndex == undefined) { return true }
+        if ($('#ShowGrid').datagrid('validateRow', editIndex)) {
+            $('#ShowGrid').datagrid('endEdit', editIndex);
+            editIndex = undefined;
+            return true;
+        } else {
+            return false;
+        }
+    }
+    function onClickCell(index, field) {
+        if (endEditing()) {
+            $('#ShowGrid').datagrid('selectRow', index)
+                    .datagrid('editCell', { index: index, field: field });
+            editIndex = index;
+        }
+    }    /*function formatPrice(val, row) {
+        if (val < 30) {
+        return '<span style="color:red;">' + val + '</span>';
+        } else {
+            return val;
+        }
+    }*/
+
+    //手工盘点（只保存修改的值）
+    function ManualCheck() {
+        var rows = $('#ShowGrid').datagrid('getChanges');
+        if (rows.length > 0) {
+            $.each(rows, function (i, row) {
+                $.post("DoCheck?", row, function (data) {
+                    if (data > 0) {
+                        Search();
+                        top.Dialog.alert("盘点成功！");
+                    } else {
+                        top.Dialog.alert("盘点失败！");
+                    }
+                });
+            });
+        } else {
+            top.Dialog.alert("请填写盘点数量资产！");
+        }
+    }
+
+    //一键盘点（全部保存）
+    function OneKeyCheck() {
+        top.Dialog.confirm("确认一键盘点？", function () {
+            var rows = $('#ShowGrid').datagrid('getChanges');
+            var Params = {};
+            if (rows.length > 0) {//部分已经手填过了，余下的一键盘点
+                $.each(rows, function (i, row) {
+                    Params.BillID = BillID;
+                    Params.ID = row.ID;
+                    Params.ActualQuantity = row.ActualQuantity;
+                    //$.post("OneKeyCheck?", rows, function (data) {
+                    $.post("OneKeyCheck?", Params, function (data) {
+                        if (data > 0) {
+                            Search();
+                            top.Dialog.alert("一键盘点成功！");
+                        } else if (data < 0) {
+                            top.Dialog.alert("一键盘点失败！");
+                        } else {
+                            top.Dialog.alert("已经一键盘点过了，再次只有进行手工盘点。");
+                        }
+                    });
+                });
+            } else {//直接都一键盘点
+                Params.BillID = BillID;
+                $.post("OneKeyCheck?", Params, function (data) {
+                    if (data > 0) {
+                        Search();
+                        top.Dialog.alert("一键盘点成功！");
+                        //top.zDialog.ClosePage(getUrlParam("PageID"), data);
+                    } else if (data < 0) {
+                        top.Dialog.alert("一键盘点失败！");
+                    } else {
+                        top.Dialog.alert("已经一键盘点过了，再次只有进行手工盘点。");
+                    }
+                });
+            }
+        });
+        //top.zDialog.ClosePage(getUrlParam("PageID"), data);
+    }
+
+    var BillID = 0;
+    $(document).ready(function () {
+        BillID = getUrlParam('BillID');
+        DataLoad(BillID);
+    });
+
+</script>

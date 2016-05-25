@@ -1,0 +1,28 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div style="width:800px;height:600px;">
+    <select id="Category">
+        <option value="">全部</option>
+    </select>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        SelectLoad();
+    });
+
+    function SelectLoad() {
+        $.post("GetCategory?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Category").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+
+        //$("#Category").empty();
+    }
+</script>
+

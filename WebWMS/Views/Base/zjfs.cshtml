@@ -1,0 +1,128 @@
+﻿@{
+    ViewBag.Title = "增加方式";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div>
+    <div id="ShowGrid"></div>
+</div>
+<script type="text/javascript">
+    var Columns = [
+        { field: 'ck', checkbox: true },   //选择
+        { title: '方式编码', field: 'Code', width: 80, sortable: true },
+        { title: '方式名称', field: 'Name', width: 80, sortable: true },
+        { title: '备注', field: 'Note', width: 120, sortable: true }
+    ];
+    function DataLoad() {
+        $('#ShowGrid').datagrid({
+            title: '增加方式',
+            iconCls: 'icon-view',
+            height: function () { return document.body.clientHeight * 1 },//自动高度
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: '/Shared/GetAddMode',
+            columns: [Columns],
+            rownumbers: true,
+            toolbar: [{
+                id: 'btnAdd',
+                text: '新增',
+                iconCls: 'icon-add',
+                handler: function () {
+                    Add();
+                }
+            }, '-', {
+                id: 'btnEdit',
+                text: '编辑',
+                iconCls: 'icon-edit',
+                handler: function () {
+                    Edit();
+                }
+            }, '-', {
+                id: 'btnDelete',
+                text: '删除',
+                iconCls: 'icon-cancel',
+                handler: function () {
+                    Delete();
+                }
+            }, '-', {
+                text: '刷新',
+                iconCls: 'icon-reload',
+                handler: function () {
+                    Search();
+                }
+            }]
+        });
+    }
+    //查询
+    function Search() {
+        $('#ShowGrid').datagrid('reload');
+    }
+
+    function Add() {
+        top.zDialog.OpenPage({
+            width: 300,
+            height: 200,
+            url: "/Base/zjfs_add?Edit=0",
+            title: "新增",
+            Callback: function (data) {
+                Search();
+            }
+        });
+    }
+
+    function Edit() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            if (objs.length == 1) {
+                top.zDialog.OpenPage({
+                    width: 300,
+                    height: 200,
+                    url: '/Base/zjfs_add?Edit=1&Code=' + objs[0].Code,
+                    title: "编辑",
+                    Callback: function (data) {
+                        Search();
+                    }
+                });
+            } else {
+                top.Dialog.alert("请选择一条增加方式编辑！")
+            }
+        } else {
+            top.Dialog.alert("请选择要编辑的增加方式！")
+        }
+    }
+
+    function Delete() {
+        var objs = $('#ShowGrid').datagrid('getChecked');
+        if (objs.length > 0) {
+            var strCode= "", count = 0;
+            $.each(objs, function (i, obj) {
+                strCode = strCode + obj.Code + ",";
+                count++;
+            });
+            if (count > 0) {
+                strCode = strCode.substring(0, strCode.length - 1);
+                top.Dialog.confirm("确定删除？", function () {
+                    $.post("AddModeDelete", { StrCode: strCode }, function (data) {
+                        if (data > 0) {
+                            Search();
+                            top.Dialog.alert("删除成功！");
+                        } else if (data < 0) {
+                            top.Dialog.alert("删除失败！");
+                        } else {
+                            top.Dialog.alert("已在使用，不能删除！");
+                        }
+                    });
+                });
+            }
+        } else {
+            top.Dialog.alert("请选择要删除的增加方式！");
+        }
+    }
+
+    $(document).ready(function () {
+        DataLoad();
+    });
+
+</script>

@@ -1,0 +1,84 @@
+﻿@{
+    ViewBag.Title = "资产信息";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="easyui-panel" title="存放地址报表" style="width:100%;height:80px;padding:10px;">
+    <table>
+        <tr>
+            <td align="right">关&nbsp;键&nbsp;字</td>
+            <td><input id="KeyWord" /></td>
+            <td align="right">存放位置</td>
+            <td>
+                <select id="Storage"><option value="">全部</option></select>
+            </td>
+        </tr>
+    </table>
+</div>
+<div>
+    <div id="ShowGrid" style="width:100%;padding:10px;"></div>
+</div>
+
+<script type="text/javascript">
+    var Columns = [
+        { field: 'ck', checkbox: true },   //选择
+        { title: '资产名称', field: 'Name', width: 100, sortable: true },
+        { title: '使用部门', field: 'DepartmentName', width: 100, sortable: true },
+        { title: '存放位置代码', field: 'StorageCode', width: 80, sortable: true },
+        { title: '存放位置名称', field: 'StorageName', width: 100, sortable: true }
+    ];
+
+    //实现对DataGird控件的绑定操作
+    function DataLoad(Params) {
+        var Params = {};
+        Params.KeyWord = $("#KeyWord").val();
+        Params.StorageCode = $("#Storage").val();
+
+        $('#ShowGrid').datagrid({
+            //title: '存放地址',
+            iconCls: 'icon-view',
+            height: 380,
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            url: '/Shared/GetInventory',
+            columns: [Columns],
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 10,
+            rownumbers: true,
+            queryParams: Params,
+            toolbar: [{
+                text: '查询',
+                iconCls: 'icon-search',
+                handler: function () {
+                    Search();
+                }
+            }]
+        });
+    }
+
+    //查询
+    function Search() {
+        var queryParams = {};
+        queryParams.KeyWord = $("#KeyWord").val();
+        queryParams.StorageCode = $("#Storage").val();
+        $("#ShowGrid").datagrid("reload", queryParams);
+    }
+
+    function SelectLoad() {
+        //存放位置
+        $.post("/Shared/GetStorage?", function (data) {
+            var objs = $.parseJSON(data);
+            $.each(objs, function (i, obj) {
+                $("#Storage").append("<option value=" + obj.Code + ">" + obj.Name + "</option>");
+            });
+        });
+    }
+
+    $(document).ready(function () {
+        SelectLoad();
+        DataLoad();
+    });
+</script>

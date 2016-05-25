@@ -1,0 +1,134 @@
+﻿@{
+    ViewBag.Title = "AccordionPage";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+    <div class="easyui-panel" title="资产信息" style="width:100%;height:80px;padding:10px;">
+        关键字<input id="KeyWord" />
+    </div>
+    <!--<div id="fileQueue" class="fileQueue"></div>-->
+    <div>
+        <div id="ShowGrid"></div>
+    </div>
+
+<script type="text/javascript">
+    var Columns = [
+        //{ field: 'ck', checkbox: true },   //选择
+        //{ title: 'ID', field: 'ID', width: 40, sortable: true },  //主键
+        { title: '资产编码', field: 'Code', width: 80, sortable: true },
+        { title: '资产名称', field: 'Name', width: 100, sortable: true },
+        { title: '资产条码', field: 'BarCode', width: 120, sortable: true },
+        { title: '资产规格', field: 'ChartNumber', width: 100, sortable: true },
+        { title: '资产类型', field: 'CategoryName', width: 100, sortable: true },
+        { title: '资产状态', field: 'StatusName', width: 100, sortable: true },
+        { title: '增加人', field: 'OperatorName', width: 80, sortable: true },
+        { title: '资产数量', field: 'Quantity', width: 60, sortable: true },
+        { title: '使用人', field: 'UserName', width: 80, sortable: true },
+        { title: '存放位置', field: 'StorageName', width: 120, sortable: true },
+        { title: '单位', field: 'MeasureName', width: 60, sortable: true },
+        { title: '资产原值', field: 'Price', width: 80, sortable: true },
+        { title: '增加方式', field: 'AddModeName', width: 100, sortable: true },
+        { title: '使用年限', field: 'LimitYear', width: 60, sortable: true },
+        { title: '添加时间', field: 'AddTime', width: 120, sortable: true },
+        { title: '备注', field: 'Note', width: 160, sortable: true }
+    ];
+
+    //实现对DataGird控件的绑定操作
+    function DataLoad() {
+        var queryData = {};
+        $('#ShowGrid').datagrid({
+            url: '/Shared/GetInventory',
+            //title: '资产信息',
+            iconCls: 'icon-view',
+            height: function () { return document.body.clientHeight * 1 },//自动高度
+            //width:function () { return document.body.clientWidth * 1 },//自动宽度
+            nowrap: true,
+            autoRowHeight: false,
+            striped: true,
+            collapsible: true,
+            pagination: true,
+            pageNumber: 1,
+            pageSize: 20,//页容量
+            rownumbers: true,
+            //sortName: 'ID',    //根据某个字段给easyUI排序
+            sortOrder: 'asc',
+            remoteSort: false,
+            idField: 'ID',
+            queryParams: queryData,
+            columns: [Columns],
+            toolbar: [{
+                id: 'btnSearch',
+                text: '查询',
+                iconCls: 'icon-search',
+                handler: function () {
+                    Search();//实现添加记录的页面
+                }
+            }/*, '-', {
+                id: 'btnImport',
+                text: '导入',
+                iconCls: 'icon-add',
+                handler: function () {
+                    Import();//实现修改记录的方法
+                }
+            }, '-', {
+                id: 'btnExport',
+                text: '导出',
+                iconCls: 'icon-remove',
+                handler: function () {
+                    Export();//实现直接删除数据的方法
+                }
+            }*/]
+        });
+    }
+    //查询
+    function Search() {
+        var queryParams = {};
+        queryParams.KeyWord = $("#KeyWord").val();
+        queryParams.StatusCode = $("#Status").val();
+        queryParams.CategoryCode = $("#Category").val();
+        queryParams.MeasureCode = $("#Measure").val();
+        queryParams.DepartmentCode = $("#Department").val();
+        queryParams.EmployerCode = $("#Employer").val();
+        queryParams.StorageCode = $("#Storage").val();
+        queryParams.AddModeCode = $("#AddMode").val();
+        //重新加载datagrid的数据  
+        $("#ShowGrid").datagrid("reload", queryParams);
+    }
+
+    function Import() {
+        $('#btnImport').uploadify({
+            'swf': '/Content/Uploadify/uploadify.swf',  //FLash文件路径
+            'buttonText': '浏  览',                                 //按钮文本
+            'uploader': '/Home/Import',                       //处理文件上传Action
+            'queueID': 'fileQueue',                        //队列的ID
+            'queueSizeLimit': 10,                          //队列最多可上传文件数量，默认为999
+            'auto': false,                                 //选择文件后是否自动上传，默认为true
+            'multi': true,                                 //是否为多选，默认为true
+            'removeCompleted': true,                       //是否完成后移除序列，默认为true
+            'fileSizeLimit': '10MB',                       //单个文件大小，0为无限制，可接受KB,MB,GB等单位的字符串值
+            'fileTypeDesc': 'Image Files',                 //文件描述
+            'fileTypeExts': '*.gif; *.jpg; *.png; *.bmp;*.tif;*.doc;*.xls;*.xlsx;*.zip',  //上传的文件后缀过滤器
+            'onQueueComplete': function (event, data) {                 //所有队列完成后事件
+                //ShowUpFiles($("#Attachment_GUID").val(), "div_files");  //完成后更新已上传的文件列表
+                Search();
+                $.messager.alert("提示", "上传完毕！");                                     //提示完成           
+            },
+            'onUploadStart': function (file) {
+                //$("#btnImport").uploadify("settings", 'formData', { 'folder': '资产', 'guid': $("#Attachment_GUID").val() }); //动态传参数
+                $("#btnImport").uploadify('formData');
+            },
+            'onUploadError': function (event, queueId, fileObj, errorObj) {
+                //alert(errorObj.type + "：" + errorObj.info);
+            }
+        });
+
+    }
+
+    function Export() {
+
+    }
+
+    $(document).ready(function () {
+        DataLoad();
+    });
+</script>
